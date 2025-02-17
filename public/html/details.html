@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP-Kunden-Details</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #f9fafb, #e6e6e6);
+            color: #333;
+        }
+
+        .container {
+            padding: 20px 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            background: #FEC63D;
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .navigate-button {
+            background-color: #FEC63D;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .navigate-button:hover {
+            background-color: #FEC63D;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #FEC63D;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            padding-bottom: 0;
+        }
+
+        html, body {
+            min-height: 100%;
+        }
+
+        body {
+            overflow: auto;
+        }
+
+        #offersOutput {
+            margin-bottom: 40px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .navigate-button {
+            margin-bottom: 20px;
+        }
+
+        #customerSelect {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9fafb;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.3s ease;
+        }
+
+        #customerSelect:focus {
+            border-color: #FEC63D;
+            outline: none;
+        }
+
+        #customerSelect:hover {
+            background: #f1f1f1;
+        }
+
+        .container {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        #theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #FFFFFF;
+            color: #333;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 16px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #theme-toggle:hover {
+            background-color: #E0A800;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Details zu VIP-Kunden</h1>
+</div>
+
+<div class="container">
+    <a href="powerkunden.html" class="navigate-button">Zurück</a>
+
+    <h2>Details zu VIP-Kunden</h2>
+    <button id="theme-toggle">🌙</button>
+
+    <!-- Kaufhistorie -->
+    <h3>Kaufhistorie</h3>
+    <select id="customerSelect" onchange="updatePurchaseHistory()"></select>
+    <div class="table-container">
+        <table>
+            <thead>
+            <tr>
+                <th>Datum</th>
+                <th>Artikel</th>
+                <th>Betrag (€)</th>
+            </tr>
+            </thead>
+            <tbody id="purchaseHistoryTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Präferenzen -->
+    <h3>Präferenzen</h3>
+    <div class="chart-container">
+        <canvas id="preferencesChart"></canvas>
+    </div>
+
+    <!-- Angebote -->
+    <h3>Zielgerichtete Angebote</h3>
+    <button class="navigate-button" onclick="generateOffers()">Angebote generieren</button>
+    <div id="offersOutput"></div>
+</div>
+
+<script>
+    const purchaseHistory = {
+        "Anna Müller": [
+            { date: "2023-01-15", item: "Antiker Spiegel", amount: 2400 },
+            { date: "2023-02-05", item: "Barocker Schreibtisch", amount: 4800 },
+            { date: "2023-03-12", item: "Ölgemälde", amount: 3500 },
+            { date: "2023-04-20", item: "Persischer Teppich", amount: 4200 },
+            { date: "2023-05-15", item: "Bronzestatue", amount: 3600 },
+            { date: "2023-06-18", item: "Kronleuchter", amount: 4600 },
+            { date: "2023-07-22", item: "Silberbesteck-Set", amount: 3300 },
+            { date: "2023-08-10", item: "Antike Uhr", amount: 3900 },
+            { date: "2023-09-05", item: "Art Deco Armbanduhr", amount: 5400 },
+            { date: "2023-10-20", item: "Antiker Sekretär", amount: 4200 },
+            { date: "2023-11-15", item: "Kristallschale", amount: 3800 },
+            { date: "2023-12-05", item: "Porzellanfigur", amount: 3000 },
+            { date: "2023-12-20", item: "Klassisches Gemälde", amount: 4500 },
+            { date: "2024-01-10", item: "Schmuckkästchen", amount: 2700 },
+            { date: "2024-02-05", item: "Bronzefigur", amount: 3600 },
+            { date: "2024-03-15", item: "Antike Truhe", amount: 4000 },
+            { date: "2024-04-01", item: "Teeservice", amount: 2400 },
+            { date: "2024-05-10", item: "Vase aus der Ming-Dynastie", amount: 7200 },
+            { date: "2024-06-20", item: "Exklusives Gemälde", amount: 8800 },
+            { date: "2024-07-05", item: "Antiker Spiegel", amount: 2500 }
+        ],
+
+        "Max Schmidt": [
+            { date: "2023-01-10", item: "Klassischer Schrank", amount: 4200 },
+            { date: "2023-01-25", item: "Antiker Kronleuchter", amount: 5100 },
+            { date: "2023-02-15", item: "Ölgemälde - Landschaft", amount: 7500 },
+            { date: "2023-03-10", item: "Antike Kommode", amount: 3800 },
+            { date: "2023-03-28", item: "Bronzestatue", amount: 4800 },
+            { date: "2023-04-15", item: "Barock-Sekretär", amount: 5200 },
+            { date: "2023-05-05", item: "Ming-Dynastie Vase", amount: 9200 },
+            { date: "2023-06-02", item: "Jugendstil Spiegel", amount: 4000 },
+            { date: "2023-07-20", item: "Silberbesteck-Set", amount: 4500 },
+            { date: "2023-08-12", item: "Antike Wanduhr", amount: 3700 },
+            { date: "2023-08-25", item: "Kristallschale", amount: 2600 },
+            { date: "2023-09-10", item: "Art Deco Leuchter", amount: 5900 },
+            { date: "2023-09-30", item: "Goldene Taschenuhr", amount: 8800 },
+            { date: "2023-10-20", item: "Orientteppich", amount: 6400 },
+            { date: "2023-11-05", item: "Gemälde - Stillleben", amount: 7500 },
+            { date: "2023-11-25", item: "Porzellanfigur", amount: 4300 },
+            { date: "2023-12-10", item: "Bronzefigur", amount: 5200 },
+            { date: "2023-12-30", item: "Antiker Holzstuhl", amount: 2900 },
+            { date: "2024-01-15", item: "Teeservice aus Silber", amount: 4100 },
+            { date: "2024-02-05", item: "Renaissance Bücherschrank", amount: 6200 }
+        ],
+
+        "Lisa Weber": [
+            { date: "2023-01-05", item: "Antike Truhe", amount: 4200 },
+            { date: "2023-01-20", item: "Gemälde - Sonnenuntergang", amount: 8900 },
+            { date: "2023-02-12", item: "Porzellanfigur - Tänzerin", amount: 3200 },
+            { date: "2023-03-01", item: "Kronleuchter - Jugendstil", amount: 5700 },
+            { date: "2023-03-25", item: "Bronzestatue - Adler", amount: 6100 },
+            { date: "2023-04-18", item: "Orientteppich - Persisch", amount: 7300 },
+            { date: "2023-05-10", item: "Barock-Sekretär", amount: 5200 },
+            { date: "2023-06-01", item: "Antike Wanduhr", amount: 4700 },
+            { date: "2023-06-15", item: "Silberbesteck-Set", amount: 4500 },
+            { date: "2023-07-02", item: "Gemälde - Stillleben", amount: 8800 },
+            { date: "2023-07-30", item: "Kristallschale", amount: 3100 },
+            { date: "2023-08-12", item: "Teeservice - Rosenmuster", amount: 3500 },
+            { date: "2023-09-05", item: "Vase aus der Qing-Dynastie", amount: 9800 },
+            { date: "2023-09-20", item: "Holzstuhl - Barockstil", amount: 2700 },
+            { date: "2023-10-10", item: "Bronzefigur - Tänzerin", amount: 6100 },
+            { date: "2023-11-05", item: "Art Deco Schmuckkästchen", amount: 4300 },
+            { date: "2023-12-01", item: "Gemälde - Herbstlandschaft", amount: 8900 },
+            { date: "2023-12-15", item: "Antikes Bücherregal", amount: 7500 },
+            { date: "2024-01-10", item: "Jugendstil-Spiegel", amount: 7600 }
+        ],
+
+        "Tom Meier": [
+            { date: "2023-01-12", item: "Antiker Schreibtisch", amount: 6200 },
+            { date: "2023-01-28", item: "Barock-Kommode", amount: 4500 },
+            { date: "2023-02-15", item: "Gemälde - Seelandschaft", amount: 8400 },
+            { date: "2023-03-01", item: "Antiker Teppich - Persien", amount: 7700 },
+            { date: "2023-03-20", item: "Bronzestatue - Löwe", amount: 6100 },
+            { date: "2023-04-05", item: "Antike Wanduhr", amount: 4800 },
+            { date: "2023-05-01", item: "Kristallkaraffe", amount: 2900 },
+            { date: "2023-05-25", item: "Ölgemälde - Waldlandschaft", amount: 9300 },
+            { date: "2023-06-10", item: "Art Deco Leuchter", amount: 5600 },
+            { date: "2023-06-22", item: "Silberbesteck-Set", amount: 4200 },
+            { date: "2023-07-15", item: "Porzellanfigur - Tänzerin", amount: 3300 },
+            { date: "2023-08-01", item: "Schmuckkästchen - Mahagoni", amount: 3700 },
+            { date: "2023-08-20", item: "Vase aus der Ming-Dynastie", amount: 9100 },
+            { date: "2023-09-10", item: "Antikes Bücherregal", amount: 7500 },
+            { date: "2023-09-25", item: "Gemälde - Berglandschaft", amount: 8700 },
+            { date: "2023-10-05", item: "Bronzefigur - Adler", amount: 6800 },
+            { date: "2023-11-01", item: "Antike Truhe", amount: 4900 },
+            { date: "2023-11-20", item: "Teeservice - Floral", amount: 3200 },
+            { date: "2023-12-10", item: "Jugendstil Spiegel", amount: 7600 }
+        ],
+
+        "Sophie Krause": [
+            { date: "2023-01-10", item: "Ölgemälde - Frühlingslandschaft", amount: 8500 },
+            { date: "2023-02-05", item: "Antike Wanduhr", amount: 4700 },
+            { date: "2023-02-20", item: "Jugendstil Vase", amount: 7200 },
+            { date: "2023-03-12", item: "Kristallschale", amount: 3500 },
+            { date: "2023-03-28", item: "Art Deco Armbanduhr", amount: 8800 },
+            { date: "2023-04-15", item: "Antike Truhe", amount: 4900 },
+            { date: "2023-05-05", item: "Barock-Kommode", amount: 6700 },
+            { date: "2023-05-22", item: "Bronzefigur - Tänzerin", amount: 5300 },
+            { date: "2023-06-10", item: "Teeservice - Jugendstil", amount: 3400 },
+            { date: "2023-06-25", item: "Gemälde - Stillleben mit Blumen", amount: 8900 },
+            { date: "2023-07-05", item: "Antiker Sekretär", amount: 7200 },
+            { date: "2023-08-01", item: "Bronzestatue - Löwe", amount: 6100 },
+            { date: "2023-08-20", item: "Orientteppich - Persisch", amount: 7900 },
+            { date: "2023-09-10", item: "Porzellanfigur - Tänzerin", amount: 3200 },
+            { date: "2023-10-05", item: "Kronleuchter - Barockstil", amount: 6200 },
+            { date: "2023-10-28", item: "Antiker Spiegel", amount: 3800 },
+            { date: "2023-11-15", item: "Silberbesteck-Set", amount: 4500 },
+            { date: "2023-12-05", item: "Renaissance Bücherregal", amount: 7400 }
+        ],
+
+        "Peter Wagner": [
+            { date: "2023-01-15", item: "Antike Truhe", amount: 4900 },
+            { date: "2023-02-01", item: "Gemälde - Sonnenuntergang", amount: 8800 },
+            { date: "2023-02-20", item: "Bronzestatue - Pferd", amount: 5400 },
+            { date: "2023-03-10", item: "Kristallkaraffe", amount: 3200 },
+            { date: "2023-03-25", item: "Barock-Kommode", amount: 6700 },
+            { date: "2023-04-12", item: "Antiker Spiegel", amount: 3600 },
+            { date: "2023-05-05", item: "Ölgemälde - Herbstlandschaft", amount: 7500 },
+            { date: "2023-05-20", item: "Kronleuchter - Jugendstil", amount: 6200 },
+            { date: "2023-06-08", item: "Silberbesteck-Set", amount: 4700 },
+            { date: "2023-06-25", item: "Jugendstil Vase", amount: 7300 },
+            { date: "2023-07-12", item: "Porzellanfigur - Tänzerin", amount: 3200 },
+            { date: "2023-08-01", item: "Antiker Sekretär", amount: 5200 },
+            { date: "2023-08-15", item: "Teeservice - Floral", amount: 3400 },
+            { date: "2023-09-10", item: "Renaissance Bücherregal", amount: 7400 },
+            { date: "2023-09-30", item: "Art Deco Leuchter", amount: 5400 },
+            { date: "2023-10-15", item: "Orientteppich - Persisch", amount: 8900 },
+            { date: "2023-11-01", item: "Bronzefigur - Tänzerin", amount: 6100 }
+        ],
+
+        "Clara Lehmann": [
+            { date: "2023-01-08", item: "Ölgemälde - Mediterrane Landschaft", amount: 7600 },
+            { date: "2023-01-25", item: "Antike Wanduhr", amount: 4800 },
+            { date: "2023-02-10", item: "Bronzestatue - Pferd", amount: 5300 },
+            { date: "2023-02-28", item: "Art Deco Schmuckkästchen", amount: 3200 },
+            { date: "2023-03-15", item: "Kristallschale", amount: 3500 },
+            { date: "2023-03-30", item: "Antiker Sekretär", amount: 7200 },
+            { date: "2023-04-18", item: "Orientteppich - Persisch", amount: 8100 },
+            { date: "2023-05-08", item: "Teeservice - Blauweiß", amount: 3100 },
+            { date: "2023-05-25", item: "Barock-Kommode", amount: 6900 },
+            { date: "2023-06-12", item: "Gemälde - Stillleben mit Blumen", amount: 7800 },
+            { date: "2023-06-28", item: "Silberbesteck-Set", amount: 4600 },
+            { date: "2023-07-10", item: "Kronleuchter - Jugendstil", amount: 5900 },
+            { date: "2023-07-30", item: "Antiker Spiegel", amount: 3800 },
+            { date: "2023-08-15", item: "Porzellanfigur - Tänzerin", amount: 3200 },
+            { date: "2023-09-05", item: "Bronzefigur - Adler", amount: 6100 },
+            { date: "2023-10-01", item: "Renaissance Bücherregal", amount: 7500 },
+            { date: "2023-10-20", item: "Jugendstil Vase", amount: 7200 }
+        ],
+
+        "Maria Fischer": [
+            { date: "2023-01-12", item: "Ölgemälde - Winterlandschaft", amount: 7200 },
+            { date: "2023-02-05", item: "Antike Truhe", amount: 4800 },
+            { date: "2023-02-22", item: "Kristallschale", amount: 3200 },
+            { date: "2023-03-10", item: "Jugendstil Spiegel", amount: 5400 },
+            { date: "2023-03-30", item: "Silberbesteck-Set", amount: 4700 },
+            { date: "2023-04-18", item: "Vase aus der Ming-Dynastie", amount: 8100 },
+            { date: "2023-05-05", item: "Barock-Kommode", amount: 6900 },
+            { date: "2023-06-12", item: "Teeservice - Blauweiß", amount: 3100 },
+            { date: "2023-06-28", item: "Porzellanfigur - Tänzerin", amount: 3200 },
+            { date: "2023-07-10", item: "Bronzefigur - Adler", amount: 5900 },
+            { date: "2023-07-30", item: "Gemälde - Stillleben mit Blumen", amount: 7800 },
+            { date: "2023-08-15", item: "Antiker Sekretär", amount: 7200 },
+            { date: "2023-09-05", item: "Renaissance Bücherregal", amount: 7500 },
+            { date: "2023-10-01", item: "Antike Wanduhr", amount: 5200 },
+            { date: "2023-10-20", item: "Kronleuchter - Jugendstil", amount: 6800 },
+            { date: "2023-11-05", item: "Schmuckkästchen - Art Deco", amount: 3300 }
+        ],
+        "Hans Becker": [
+            { date: "2023-01-08", item: "Ölgemälde - Seestück", amount: 8200 },
+            { date: "2023-01-22", item: "Barock-Kommode", amount: 7200 },
+            { date: "2023-02-10", item: "Kristallschale", amount: 3600 },
+            { date: "2023-03-05", item: "Bronzefigur - Löwe", amount: 5900 },
+            { date: "2023-03-25", item: "Antiker Spiegel", amount: 4200 },
+            { date: "2023-04-12", item: "Porzellanfigur - Tänzerin", amount: 3100 },
+            { date: "2023-05-08", item: "Silberbesteck-Set", amount: 4900 },
+            { date: "2023-06-15", item: "Gemälde - Sonnenuntergang", amount: 8800 },
+            { date: "2023-07-01", item: "Antiker Sekretär", amount: 7200 },
+            { date: "2023-07-25", item: "Orientteppich - Persisch", amount: 9100 },
+            { date: "2023-08-18", item: "Teeservice - Floral", amount: 3600 },
+            { date: "2023-09-05", item: "Vase aus der Ming-Dynastie", amount: 8400 },
+            { date: "2023-10-10", item: "Antike Wanduhr", amount: 5700 },
+            { date: "2023-11-15", item: "Jugendstil Kronleuchter", amount: 6500 },
+            { date: "2023-12-01", item: "Schmuckkästchen - Art Deco", amount: 4300 }
+        ],
+        "Julia Braun": [
+            { date: "2023-01-15", item: "Ölgemälde - Impressionistische Landschaft", amount: 7500 },
+            { date: "2023-02-02", item: "Barock-Kommode", amount: 7100 },
+            { date: "2023-02-20", item: "Kristallschale", amount: 3400 },
+            { date: "2023-03-08", item: "Bronzefigur - Tänzerin", amount: 6100 },
+            { date: "2023-04-01", item: "Antiker Spiegel", amount: 4000 },
+            { date: "2023-04-22", item: "Silberbesteck-Set", amount: 5200 },
+            { date: "2023-05-12", item: "Porzellanfigur - Engel", amount: 3700 },
+            { date: "2023-06-05", item: "Antiker Sekretär", amount: 6900 },
+            { date: "2023-07-01", item: "Jugendstil Vase", amount: 5800 },
+            { date: "2023-07-25", item: "Teeservice - Royal Blau", amount: 4100 },
+            { date: "2023-08-15", item: "Orientteppich - Persisch", amount: 8700 },
+            { date: "2023-09-10", item: "Vase aus der Ming-Dynastie", amount: 9100 },
+            { date: "2023-10-05", item: "Antike Wanduhr", amount: 5600 },
+            { date: "2023-11-15", item: "Kronleuchter - Jugendstil", amount: 7200 },
+            { date: "2023-12-01", item: "Schmuckkästchen - Art Deco", amount: 3900 }
+        ],
+        "Frank Müller": [
+            { date: "2023-01-10", item: "Ölgemälde - Sonnenuntergang am Meer", amount: 7800 },
+            { date: "2023-02-05", item: "Antiker Sekretär", amount: 6700 },
+            { date: "2023-02-25", item: "Bronzestatue - Adler", amount: 5300 },
+            { date: "2023-03-15", item: "Kristallschale", amount: 3200 },
+            { date: "2023-04-05", item: "Silberbesteck-Set", amount: 5100 },
+            { date: "2023-04-28", item: "Vase aus der Qing-Dynastie", amount: 9200 },
+            { date: "2023-05-20", item: "Barock-Kommode", amount: 6800 },
+            { date: "2023-06-12", item: "Porzellanfigur - Tänzerin", amount: 3400 },
+            { date: "2023-07-01", item: "Teeservice - Floral", amount: 4200 },
+            { date: "2023-08-05", item: "Orientteppich - Persisch", amount: 8100 },
+            { date: "2023-09-10", item: "Antike Wanduhr", amount: 5500 },
+            { date: "2023-10-01", item: "Jugendstil Kronleuchter", amount: 7200 },
+            { date: "2023-11-15", item: "Schmuckkästchen - Mahagoni", amount: 3800 },
+            { date: "2023-12-05", item: "Renaissance Bücherregal", amount: 7500 }
+        ],
+        "Laura Klein": [
+            { date: "2023-01-12", item: "Ölgemälde - Berglandschaft", amount: 7400 },
+            { date: "2023-02-08", item: "Antiker Sekretär", amount: 6800 },
+            { date: "2023-02-22", item: "Bronzefigur - Tänzerin", amount: 5200 },
+            { date: "2023-03-10", item: "Kristallschale", amount: 3100 },
+            { date: "2023-04-01", item: "Silberbesteck-Set", amount: 5000 },
+            { date: "2023-04-18", item: "Vase aus der Ming-Dynastie", amount: 8800 },
+            { date: "2023-05-12", item: "Barock-Kommode", amount: 6700 },
+            { date: "2023-06-05", item: "Porzellanfigur - Tänzerin", amount: 3200 },
+            { date: "2023-07-10", item: "Teeservice - Royal Blau", amount: 4000 },
+            { date: "2023-08-01", item: "Orientteppich - Persisch", amount: 8500 },
+            { date: "2023-09-05", item: "Antike Wanduhr", amount: 5400 },
+            { date: "2023-10-12", item: "Jugendstil Kronleuchter", amount: 7100 },
+            { date: "2023-11-08", item: "Schmuckkästchen - Art Deco", amount: 3700 },
+            { date: "2023-12-03", item: "Renaissance Bücherregal", amount: 7300 }
+        ],
+
+        "Martin Koch": [
+            { date: "2023-01-05", item: "Ölgemälde - Alpenpanorama", amount: 7200 },
+            { date: "2023-02-02", item: "Antiker Sekretär", amount: 6400 },
+            { date: "2023-02-28", item: "Bronzefigur - Löwe", amount: 5100 },
+            { date: "2023-03-15", item: "Kristallschale", amount: 3000 },
+            { date: "2023-04-10", item: "Silberbesteck-Set", amount: 4700 },
+            { date: "2023-05-05", item: "Vase aus der Qing-Dynastie", amount: 8900 },
+            { date: "2023-06-01", item: "Barock-Kommode", amount: 6500 },
+            { date: "2023-06-20", item: "Porzellanfigur - Tänzerin", amount: 3100 },
+            { date: "2023-07-12", item: "Teeservice - Klassisch Weiß", amount: 3800 },
+            { date: "2023-08-10", item: "Orientteppich - Persisch", amount: 8200 },
+            { date: "2023-09-18", item: "Antike Wanduhr", amount: 5300 },
+            { date: "2023-10-25", item: "Jugendstil Kronleuchter", amount: 6900 }
+        ],
+        "Sandra Berger": [
+            { date: "2023-01-12", item: "Ölgemälde - Waldlandschaft", amount: 6800 },
+            { date: "2023-02-08", item: "Antike Truhe", amount: 5600 },
+            { date: "2023-03-05", item: "Bronzestatue - Tänzerin", amount: 4700 },
+            { date: "2023-04-01", item: "Kristallschale", amount: 3100 },
+            { date: "2023-05-10", item: "Silberbesteck-Set", amount: 4900 },
+            { date: "2023-06-05", item: "Vase aus der Qing-Dynastie", amount: 7200 },
+            { date: "2023-06-25", item: "Barock-Kommode", amount: 6100 },
+            { date: "2023-07-15", item: "Porzellanfigur - Tänzerin", amount: 3400 },
+            { date: "2023-08-01", item: "Teeservice - Goldrand", amount: 3800 },
+            { date: "2023-09-12", item: "Antike Wanduhr", amount: 5100 },
+            { date: "2023-10-05", item: "Schmuckkästchen - Jugendstil", amount: 4300 }
+        ],
+        "Patrick Kurz": [
+            { date: "2023-01-18", item: "Ölgemälde - Hafenansicht", amount: 7200 },
+            { date: "2023-02-12", item: "Antiker Sekretär", amount: 6300 },
+            { date: "2023-03-01", item: "Bronzefigur - Jagdhund", amount: 5200 },
+            { date: "2023-03-22", item: "Kristallkaraffe", amount: 3100 },
+            { date: "2023-04-08", item: "Silberbesteck-Set", amount: 4900 },
+            { date: "2023-05-15", item: "Vase aus der Qing-Dynastie", amount: 7000 },
+            { date: "2023-06-05", item: "Barock-Kommode", amount: 6400 },
+            { date: "2023-06-28", item: "Porzellanfigur - Tänzerin", amount: 3500 },
+            { date: "2023-07-10", item: "Teeservice - Königliches Design", amount: 4200 },
+            { date: "2023-08-05", item: "Antike Wanduhr", amount: 5200 },
+            { date: "2023-09-18", item: "Schmuckkästchen - Art Deco", amount: 4100 }
+        ],
+        "Nina Schuster": [
+            { date: "2023-01-10", item: "Ölgemälde - Dorf im Winter", amount: 6900 },
+            { date: "2023-02-08", item: "Antiker Sekretär", amount: 6100 },
+            { date: "2023-03-03", item: "Bronzefigur - Tänzerin", amount: 4900 },
+            { date: "2023-03-22", item: "Kristallschale", amount: 3100 },
+            { date: "2023-04-05", item: "Silberbesteck-Set", amount: 4600 },
+            { date: "2023-05-10", item: "Vase aus der Qing-Dynastie", amount: 7200 },
+            { date: "2023-06-05", item: "Barock-Kommode", amount: 5800 },
+            { date: "2023-07-02", item: "Porzellanfigur - Tänzerin", amount: 3200 },
+            { date: "2023-07-25", item: "Teeservice - Handbemalt", amount: 3500 },
+            { date: "2023-08-15", item: "Antike Wanduhr", amount: 5100 },
+            { date: "2023-09-10", item: "Schmuckkästchen - Mahagoni", amount: 4200 }
+        ],
+        "Jan Hoffmann": [
+            { date: "2023-01-15", item: "Ölgemälde - Stadtansicht", amount: 7200 },
+            { date: "2023-02-10", item: "Antiker Sekretär", amount: 6400 },
+            { date: "2023-03-05", item: "Bronzefigur - Pferd", amount: 5200 },
+            { date: "2023-04-02", item: "Kristallschale", amount: 3100 },
+            { date: "2023-05-08", item: "Silberbesteck-Set", amount: 4800 },
+            { date: "2023-06-12", item: "Vase aus der Qing-Dynastie", amount: 7300 },
+            { date: "2023-07-01", item: "Barock-Kommode", amount: 6100 },
+            { date: "2023-08-10", item: "Porzellanfigur - Tänzerin", amount: 3200 },
+            { date: "2023-09-05", item: "Teeservice - Blauweiß", amount: 3500 },
+            { date: "2023-10-15", item: "Antike Wanduhr", amount: 5100 }
+        ],
+        "Theresa Lang": [
+            { date: "2023-01-20", item: "Ölgemälde - Blumenstillleben", amount: 7100 },
+            { date: "2023-02-12", item: "Antiker Sekretär", amount: 6300 },
+            { date: "2023-03-08", item: "Bronzestatue - Tänzerin", amount: 5200 },
+            { date: "2023-04-01", item: "Kristallkaraffe", amount: 3000 },
+            { date: "2023-05-15", item: "Silberbesteck-Set", amount: 4800 },
+            { date: "2023-06-05", item: "Vase aus der Qing-Dynastie", amount: 7200 },
+            { date: "2023-07-10", item: "Barock-Kommode", amount: 6200 },
+            { date: "2023-08-01", item: "Porzellanfigur - Tänzerin", amount: 3400 },
+            { date: "2023-09-05", item: "Teeservice - Handbemalt", amount: 3700 },
+            { date: "2023-10-18", item: "Antike Wanduhr", amount: 5300 }
+        ],
+        "Fabian Jung": [
+            { date: "2023-01-12", item: "Ölgemälde - Bergpanorama", amount: 6200 },
+            { date: "2023-02-08", item: "Antiker Sekretär", amount: 5900 },
+            { date: "2023-03-03", item: "Bronzestatue - Löwe", amount: 4800 },
+            { date: "2023-04-05", item: "Kristallschale", amount: 3100 },
+            { date: "2023-05-15", item: "Silberbesteck-Set", amount: 4500 },
+            { date: "2023-06-05", item: "Vase aus der Qing-Dynastie", amount: 6900 },
+            { date: "2023-07-02", item: "Barock-Kommode", amount: 5400 },
+            { date: "2023-08-01", item: "Porzellanfigur - Tänzerin", amount: 3200 },
+            { date: "2023-09-05", item: "Teeservice - Floral", amount: 3500 },
+            { date: "2023-10-15", item: "Antike Wanduhr", amount: 5000 }
+        ],
+        "Sabine Voigt": [
+            { date: "2023-01-08", item: "Ölgemälde - Küstenlandschaft", amount: 5800 },
+            { date: "2023-02-02", item: "Antiker Sekretär", amount: 5700 },
+            { date: "2023-03-05", item: "Bronzestatue - Adler", amount: 4500 },
+            { date: "2023-04-10", item: "Kristallschale", amount: 3000 },
+            { date: "2023-05-08", item: "Silberbesteck-Set", amount: 4200 },
+            { date: "2023-06-15", item: "Vase aus der Ming-Dynastie", amount: 6700 },
+            { date: "2023-07-01", item: "Barock-Kommode", amount: 5200 },
+            { date: "2023-08-12", item: "Porzellanfigur - Tänzerin", amount: 3100 },
+            { date: "2023-09-05", item: "Teeservice - Handbemalt", amount: 3400 },
+            { date: "2023-10-10", item: "Antike Wanduhr", amount: 4900 }
+        ]
+    };
+
+
+    const preferencesData = {
+        "Anna Müller": [30, 25, 20, 25],
+        "Max Schmidt": [40, 30, 15, 15],
+        "Lisa Weber": [35, 30, 20, 15],
+        "Tom Meier": [30, 35, 20, 15],
+        "Sophie Krause": [35, 30, 20, 15],
+        "Peter Wagner": [30, 35, 20, 15],
+        "Clara Lehmann": [28, 32, 22, 18],
+        "Maria Fischer": [30, 30, 25, 15],
+        "Hans Becker": [32, 28, 22, 18],
+        "Julia Braun": [30, 30, 25, 15],
+        "Frank Müller": [28, 32, 20, 20],
+        "Laura Klein": [30, 30, 25, 15],
+        "Martin Koch": [28, 34, 22, 16],
+        "Sandra Berger": [26, 32, 24, 18],
+        "Patrick Kurz": [28, 34, 20, 18],
+        "Nina Schuster": [30, 32, 20, 18],
+        "Jan Hoffmann": [28, 30, 22, 20],
+        "Theresa Lang": [30, 28, 25, 17],
+        "Fabian Jung": [28, 30, 22, 20],
+        "Sabine Voigt": [30, 28, 22, 20]
+    };
+
+    const categories = ["Gemälde", "Möbel", "Schmuck", "Sonstiges"];
+
+    const customerSelect = document.getElementById('customerSelect');
+    Object.keys(purchaseHistory).forEach(customer => {
+        const option = document.createElement('option');
+        option.value = customer;
+        option.textContent = customer;
+        customerSelect.appendChild(option);
+    });
+
+    function updatePurchaseHistory() {
+        const selectedCustomer = customerSelect.value;
+        const historyBody = document.getElementById('purchaseHistoryTableBody');
+        historyBody.innerHTML = '';
+
+        (purchaseHistory[selectedCustomer] || []).forEach(entry => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${entry.date}</td><td>${entry.item}</td><td>${entry.amount.toLocaleString()} €</td>`;
+            historyBody.appendChild(row);
+        });
+
+        updatePreferencesChart(selectedCustomer);
+    }
+
+    const preferencesChart = new Chart(document.getElementById('preferencesChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: categories,
+            datasets: [{
+                data: [0, 0, 0, 0],
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FF7043']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    function updatePreferencesChart(customer) {
+        const data = preferencesData[customer] || [0, 0, 0, 0];
+        preferencesChart.data.datasets[0].data = data;
+        preferencesChart.update();
+    }
+
+    function generateOffers() {
+        const selectedCustomer = customerSelect.value;
+        const offersOutput = document.getElementById('offersOutput');
+
+        const offers = [
+            "10% Rabatt auf Gemälde",
+            "Gratis Versand für Möbel",
+            "Exklusive Einladung zur Schmuckauktion",
+            "Rabatt auf Antike Uhren"
+        ];
+
+        const randomOffer = offers[Math.floor(Math.random() * offers.length)];
+        offersOutput.innerHTML = `<p>Angebot für ${selectedCustomer}: ${randomOffer}</p>`;
+    }
+
+    const themeToggle = document.getElementById("theme-toggle");
+    themeToggle.addEventListener("click", toggleTheme);
+    let darkMode = false;
+
+    function toggleTheme() {
+        if (!darkMode) {
+            document.body.style.background = "#000000";
+            document.querySelector(".header").style.background = "#0844A4";
+            document.querySelector(".header h1").style.color = "#FFFFFF";
+
+            document.querySelectorAll("th").forEach(th => {
+                th.style.backgroundColor = "#0844A4";
+                th.style.color = "#FFFFFF";
+            });
+            document.querySelectorAll("td").forEach(td => {
+                td.style.backgroundColor = "#0C59CF";
+                td.style.color = "#FFFFFF";
+            });
+
+            document.querySelector(".container").style.backgroundColor = "#0C59CF";
+            document.querySelector(".container").style.color = "#FFFFFF";
+
+            document.querySelector("#customerSelect").style.backgroundColor = "#0844A4";
+            document.querySelector("#customerSelect").style.color = "#FFFFFF";
+            document.querySelector("#customerSelect").style.borderColor = "#FFFFFF";
+
+            preferencesChart.options.plugins.legend.labels.color = "#FFFFFF";
+            preferencesChart.options.plugins.legend.title.color = "#FFFFFF";
+            preferencesChart.update();
+
+            document.querySelectorAll(".navigate-button").forEach(btn => {
+                btn.style.backgroundColor = "#0844A4";
+                btn.style.color = "#FFFFFF";
+                btn.style.borderColor = "#0C59CF";
+
+                btn.onmouseover = () => {
+                    btn.style.backgroundColor = "#0C59CF";
+                };
+                btn.onmouseout = () => {
+                    btn.style.backgroundColor = "#0844A4";
+                };
+            });
+
+            themeToggle.textContent = "☀️";
+            themeToggle.style.backgroundColor = "#0C59CF";
+            themeToggle.style.color = "#FFFFFF";
+            themeToggle.onmouseover = () => themeToggle.style.backgroundColor = "#0844A4";
+            themeToggle.onmouseout = () => themeToggle.style.backgroundColor = "#0C59CF";
+        } else {
+            document.body.style.background = "linear-gradient(to bottom, #f9fafb, #e6e6e6)";
+            document.querySelector(".header").style.background = "#FEC63D";
+            document.querySelector(".header h1").style.color = "white";
+
+            document.querySelectorAll("th").forEach(th => {
+                th.style.backgroundColor = "#FEC63D";
+                th.style.color = "#FFFFFF";
+            });
+            document.querySelectorAll("td").forEach(td => {
+                td.style.backgroundColor = "#FFFFFF";
+                td.style.color = "#000000";
+            });
+
+            document.querySelector(".container").style.backgroundColor = "#FFFFFF";
+            document.querySelector(".container").style.color = "#000000";
+
+            document.querySelector("#customerSelect").style.backgroundColor = "#FFFFFF";
+            document.querySelector("#customerSelect").style.color = "#000000";
+            document.querySelector("#customerSelect").style.borderColor = "#ddd";
+
+            preferencesChart.options.plugins.legend.labels.color = "#000000";
+            preferencesChart.options.plugins.legend.title.color = "#000000";
+            preferencesChart.update();
+
+            document.querySelectorAll(".navigate-button").forEach(btn => {
+                btn.style.backgroundColor = "#FEC63D";
+                btn.style.color = "#FFFFFF";
+                btn.style.borderColor = "none";
+
+                btn.onmouseover = () => {
+                    btn.style.backgroundColor = "#FFD783";
+                };
+                btn.onmouseout = () => {
+                    btn.style.backgroundColor = "#FEC63D";
+                };
+            });
+
+            themeToggle.textContent = "🌙";
+            themeToggle.style.backgroundColor = "#FFFFFF";
+            themeToggle.style.color = "#333";
+            themeToggle.onmouseover = () => themeToggle.style.backgroundColor = "#E0A800";
+            themeToggle.onmouseout = () => themeToggle.style.backgroundColor = "#FFFFFF";
+        }
+        darkMode = !darkMode;
+    }
+
+    updatePurchaseHistory();
+</script>
+
+</body>
+</html>

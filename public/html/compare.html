@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vergleichsmodus</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        #controls {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 10px;
+            gap: 10px;
+            background: #f9f9f9;
+            border-bottom: 1px solid #ccc;
+        }
+
+        #back-button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        #back-button:hover {
+            background: #0056b3;
+        }
+
+        #export-options {
+            padding: 10px 15px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #export-options:hover {
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+
+        iframe {
+            flex: 1;
+            border: none;
+        }
+
+        #comparison-section {
+            display: flex;
+            flex: 1;
+            gap: 10px;
+            padding: 10px;
+        }
+        #theme-toggle {
+            padding: 10px 15px;
+            background-color: #FFFFFF;
+            color: #333;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+        }
+
+        #theme-toggle:hover {
+            background-color: #E0A800;
+            color: #FFFFFF;
+        }
+
+    </style>
+</head>
+<body>
+<!-- Steuerleiste oben -->
+<div id="controls">
+    <button id="back-button" onclick="goBack()">Vergleich beenden</button>
+    <select id="export-options">
+        <option value="">Exportieren...</option>
+        <option value="print">Diagramme drucken</option>
+        <option value="csv">Daten als CSV</option>
+        <option value="pdf">Daten als PDF</option>
+    </select>
+    <button id="theme-toggle" onclick="toggleTheme()">🌙</button>
+</div>
+
+<!-- Vergleichsbereich -->
+<div id="comparison-section">
+    <!-- Linker Container -->
+    <div class="container">
+        <iframe id="iframe-left" src="statistics.html?compare=true"></iframe>
+    </div>
+
+    <!-- Rechter Container -->
+    <div class="container">
+        <iframe id="iframe-right" src="statistics.html?compare=true"></iframe>
+    </div>
+</div>
+
+<script>
+    function goBack() {
+        window.location.href = "statistics.html"; // Zurück zur Originalansicht
+    }
+
+    async function exportCSV() {
+        const iframeLeft = document.getElementById('iframe-left').contentDocument || document.getElementById('iframe-left').contentWindow.document;
+        const iframeRight = document.getElementById('iframe-right').contentDocument || document.getElementById('iframe-right').contentWindow.document;
+
+        const tableLeft = iframeLeft.querySelector('table#data-overview');
+        const tableRight = iframeRight.querySelector('table#data-overview');
+
+        if (!tableLeft || !tableRight) {
+            alert("Tabellen nicht gefunden. Bitte sicherstellen, dass die Tabellen geladen sind.");
+            return;
+        }
+
+        let csvContent = "data:text/csv;charset=utf-8,";
+
+        // Extrahiere Daten aus der linken Tabelle
+        csvContent += extractTableToCSV(tableLeft);
+
+        // Füge einen Trenner hinzu
+        csvContent += "\n\n--- Vergleich ---\n\n";
+
+        // Extrahiere Daten aus der rechten Tabelle
+        csvContent += extractTableToCSV(tableRight);
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "comparison.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function extractTableToCSV(table) {
+        let csvRows = [];
+        const rows = table.querySelectorAll("tr");
+
+        rows.forEach(row => {
+            const cells = Array.from(row.querySelectorAll("th, td"));
+            const rowText = cells.map(cell => `"${cell.innerText}"`).join(",");
+            csvRows.push (rowText);
+        });
+
+        return csvRows.join("\n");
+    }
+
+    function exportPDF() {
+        const {jsPDF} = window.jspdf;
+        const element = document.body;
+
+        html2canvas(element, {scale: 2}).then(canvas => {
+            const imgData = canvas.toDataURL("image/png");
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save('statistics.pdf');
+        });
+    }
+
+    document.getElementById("export-options").addEventListener("change", (event) => {
+        const value = event.target.value;
+        if (value === "print") window.print();
+        else if (value === "csv") exportCSV();
+        else if (value === "pdf") exportPDF();
+        event.target.value = "";
+    });
+
+    let darkMode = false;
+
+    function toggleTheme() {
+        darkMode = !darkMode;
+        document.body.style.backgroundColor = darkMode ? "#121212" : "#ffffff";
+        document.body.style.color = darkMode ? "#ffffff" : "#000000";
+
+        const controls = document.getElementById("controls");
+        controls.style.backgroundColor = darkMode ? "#222" : "#f9f9f9";
+        controls.style.borderBottom = darkMode ? "1px solid #444" : "1px solid #ccc";
+
+        const buttons = document.querySelectorAll("#controls button");
+        buttons.forEach(button => {
+            button.style.backgroundColor = darkMode ? "#0844A4" : "#007bff";
+            button.style.color = "#ffffff"; // Immer weißer Text
+        });
+
+        const dropdowns = document.querySelectorAll("#controls select");
+        dropdowns.forEach(select => {
+            select.style.backgroundColor = darkMode ? "#222" : "#ffffff";
+            select.style.color = darkMode ? "#ffffff" : "#000000";
+            select.style.border = darkMode ? "1px solid #444" : "1px solid #ccc";
+        });
+
+        const themeToggle = document.getElementById("theme-toggle");
+        themeToggle.textContent = darkMode ? "☀️" : "🌙";
+        themeToggle.style.backgroundColor = darkMode ? "#0844A4" : "#FFFFFF";
+        themeToggle.style.color = darkMode ? "#FFFFFF" : "#333";
+
+        applyThemeToIframe(document.getElementById("iframe-left"), darkMode);
+        applyThemeToIframe(document.getElementById("iframe-right"), darkMode);
+    }
+
+    function applyThemeToIframe(iframe, enableDarkMode) {
+        if (!iframe) return;
+        iframe.contentWindow.postMessage({ theme: enableDarkMode ? "dark" : "light" }, "*");
+    }
+</script>
+</body>
+</html>

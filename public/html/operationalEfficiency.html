@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auktionshaus Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9fafb;
+            margin: 0;
+            padding: 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            color: #0844A4;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 0.875rem;
+            color: #4B5563;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: 300px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Zwei Spalten */
+            gap: 20px; /* Abstand zwischen den Karten */
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr; /* Eine Spalte für kleinere Bildschirme */
+            }
+        }
+        /* Styling für die Dropdowns */
+        select {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        select:hover {
+            border-color: #0C59CF;
+        }
+
+        select:focus {
+            border-color: #0844A4;
+            box-shadow: 0px 0px 5px rgba(12, 89, 207, 0.5);
+        }
+    </style>
+</head>
+<body>
+<div class="grid">
+    <!-- Lagerbestandsoptimierung -->
+    <div class="card">
+        <h2>Lagerzeit Analyse</h2>
+        <p style="margin-bottom: 100px;">Durchschnittliche Lagerdauer (Tage) nach Kategorie.</p>
+
+        <label for="categorySelect" id="categoryLabel" style="display: none;">Kategorie wählen:</label>
+        <select id="categorySelect" style="display: none;" onchange="updateInventoryChart()">
+            <option value="all">Alle Kategorien</option>
+            <option value="paintings">Gemälde</option>
+            <option value="sculptures">Skulpturen</option>
+            <option value="furniture">Möbel</option>
+            <option value="ceramics">Keramik</option>
+            <option value="modern_art">Moderne Kunst</option>
+            <option value="jewelry">Schmuck</option>
+            <option value="watches">Uhren</option>
+            <option value="coins">Münzen</option>
+            <option value="books">Bücher</option>
+            <option value="wine">Wein</option>
+        </select>
+
+        <canvas id="inventoryChart"></canvas>
+    </div>
+
+    <div class="card">
+        <h2>Personal- & Raumbelegung (Kapazitätsauslastung)</h2>
+
+        <!-- Klare Erklärung, was das Diagramm zeigt -->
+        <p>Dieses Diagramm zeigt die monatliche Nutzung von Personal und Räumen im Auktionshaus.
+            Die Zahlen geben an, wie viele Ressourcen (Schätzungsbüros, Auktionshalle, Logistik) im jeweiligen Monat aktiv genutzt wurden. (Anzahl der aktiv verwendeten Räume)</p>
+
+
+        <p><strong>Farblegende:</strong></p>
+        <ul>
+            <li><span style="color:turquoise;"><strong>🔵 Türkis (0 – 6):</strong></span> Wenig genutzt</li>
+            <li><span style="color:goldenrod;"><strong>🟡 Gelb (7 – 13):</strong></span> Mittel genutzt</li>
+            <li><span style="color:red;"><strong>🔴 Rot (14+):</strong></span> Hohe Nutzung (Kapazitätsgrenze erreicht)</li>
+        </ul>
+
+        <!-- Dropdown zur Auswahl des Jahres -->
+        <label for="yearSelectHeatmap"><strong>Jahr wählen:</strong></label>
+        <select id="yearSelectHeatmap" onchange="updateResourceHeatmap()">
+            <option value="2024" selected>2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+        </select>
+
+        <canvas id="resourceHeatmap"></canvas>
+    </div>
+
+    <div class="card">
+        <h2>Anzahl der Auktionen</h2>
+
+        <p>Dieses Diagramm zeigt die Anzahl der Auktionen im gewählten Jahr.
+            Da Auktionen nicht jeden Monat stattfinden, kann es Monate ohne Einträge geben.</p>
+
+        <p><strong>Gesamtanzahl der Auktionen im gewählten Jahr:</strong>
+            <span id="auctionTotal" style="font-size: 1.2rem; color: #0C59CF;">22</span>
+        </p>
+
+        <!-- Dropdown zur Auswahl des Jahres -->
+        <label for="yearSelectAuktionen"><strong>Jahr wählen:</strong></label>
+        <select id="yearSelectAuktionen" onchange="updateAuctionCount()">
+            <option value="2024" selected>2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+        </select>
+
+        <canvas id="auctionCountChart"></canvas>
+    </div>
+
+    <div class="card">
+        <h2>Durchschnittliche Vorbereitungszeit</h2>
+
+        <p>Dieses Diagramm zeigt die durchschnittliche Vorbereitungszeit pro Kategorie und Jahr.
+            Die Vorbereitungszeit umfasst Schätzung, Marketing und Logistik.</p>
+
+        <label for="yearSelectPreparation"><strong>Jahr wählen:</strong></label>
+        <select id="yearSelectPreparation" onchange="updatePreparationChart()">
+            <option value="2024" selected>2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+        </select>
+
+        <canvas id="preparationTimeChart"></canvas>
+    </div>
+    <div class="card">
+        <h2>Durschnittliche Auktionsdauer⏳</h2>
+        <p>Gibt Einblick, wie lange eine Auktion im Schnitt dauert – wichtig für die Planung & Optimierung.</p>
+
+        <p><strong>⏳ Kürzeste Auktion:</strong> <span id="shortestAuction" style="font-size: 1.2rem; color: #E91E63;">--</span> min</p>
+        <p><strong>⏳ Längste Auktion:</strong> <span id="longestAuction" style="font-size: 1.2rem; color: #0C59CF;">--</span> min</p>
+
+        <label for="yearSelectDuration"><strong>Jahr wählen:</strong></label>
+        <select id="yearSelectDuration" onchange="updateAuctionDurationChart()">
+            <option value="2024" selected>2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+        </select>
+
+        <canvas id="auctionDurationChart"></canvas>
+    </div>
+</div>
+
+<script>
+    const colors = {
+        yellow: "#FEC63D",
+        lightYellow: "#FFD783",
+        white: "#FFFFFF",
+        darkBlue: "#0C59CF",
+        lightBlue: "#75A9F9",
+        navyBlue: "#0844A4",
+    };
+
+    // Lagerbestandsoptimierung start
+    const categories = {
+        "Gemälde": "#FF5733",
+        "Skulpturen": "#36A2EB",
+        "Möbel": "#4CAF50",
+        "Keramik": "#FFC107",
+        "Moderne Kunst": "#8E44AD",
+        "Schmuck": "#E91E63",
+        "Uhren": "#795548",
+        "Münzen": "#00BCD4",
+        "Bücher": "#9E9E9E"
+    };
+
+    const inventoryData = {
+        "2020": { "Gemälde": 200, "Skulpturen": 150, "Möbel": 180, "Keramik": 90, "Moderne Kunst": 160, "Schmuck": 110, "Uhren": 95, "Münzen": 140, "Bücher": 130 },
+        "2021": { "Gemälde": 180, "Skulpturen": 140, "Möbel": 170, "Keramik": 85, "Moderne Kunst": 150, "Schmuck": 100, "Uhren": 90, "Münzen": 130, "Bücher": 120 },
+        "2022": { "Gemälde": 160, "Skulpturen": 130, "Möbel": 160, "Keramik": 80, "Moderne Kunst": 140, "Schmuck": 95, "Uhren": 85, "Münzen": 120, "Bücher": 110 },
+        "2023": { "Gemälde": 150, "Skulpturen": 120, "Möbel": 140, "Keramik": 75, "Moderne Kunst": 130, "Schmuck": 90, "Uhren": 80, "Münzen": 110, "Bücher": 100 }
+    };
+
+    let inventoryChartCtx = document.getElementById('inventoryChart').getContext('2d');
+    let inventoryChart = new Chart(inventoryChartCtx, {
+        type: 'bar',
+        data: formatData("all"),
+        options: {
+            responsive: true,
+            scales: {
+                x: { title: { display: true, text: "Jahre" } },
+                y: { beginAtZero: true, title: { display: true, text: "Tage im Lager" } }
+            },
+            plugins: {
+                legend: { display: true },
+                tooltip: { mode: "index", intersect: false }
+            }
+        }
+    });
+
+    function updateInventoryChart() {
+        let selectedCategory = document.getElementById("categorySelect").value;
+        inventoryChart.data = formatData(selectedCategory);
+        inventoryChart.update();
+    }
+
+    function formatData(category = "all") {
+        let labels = Object.keys(inventoryData);
+        let datasets = [];
+
+        if (category === "all") {
+            datasets = Object.keys(categories).map(cat => ({
+                label: cat.charAt(0).toUpperCase() + cat.slice(1),
+                data: labels.map(year => inventoryData[year][cat]),
+                backgroundColor: colors[cat]
+            }));
+        } else {
+            datasets = [{
+                label: category.charAt(0).toUpperCase() + category.slice(1),
+                data: labels.map(year => inventoryData[year][category]),
+                backgroundColor: colors[category]
+            }];
+        }
+
+        return { labels, datasets };
+    }
+    // Lagerbestandsoptimierung ende
+
+    // Standardjahr auf 2024 setzen
+    let selectedYear = "2024";
+
+    // Funktion zur Aktualisierung der Diagramme basierend auf gewähltem Jahr
+    function updateYear() {
+        selectedYear = document.getElementById("yearSelect").value;
+        updateCharts();
+    }
+
+    // Funktion zur Aktualisierung aller Diagramme basierend auf dem gewählten Jahr
+    function updateCharts() {
+        updateInventoryChart();  // Lageranalyse aktualisieren
+        updateResourceHeatmap(); // Heatmap aktualisieren
+        updateAuctionCount();    // Auktionen pro Jahr aktualisieren
+    }
+    // 🎨 Farben für die Heatmap: Blau (wenig), Gelb (mittel), Rot (hoch)
+    const heatmapColors = {
+        low: "rgba(75, 192, 192, 0.6)",   // Wenig genutzt (Türkis-Blau)
+        medium: "rgba(255, 206, 86, 0.7)", // Mittel genutzt (Gelb)
+        high: "rgba(255, 99, 132, 0.8)"   // Stark genutzt (Rot)
+    };
+
+    // 🔥 Simulierte Daten zur Raum- & Personalbelegung pro Jahr
+    const resourceUsageData = {
+        "2020": [2, 5, 7, 3, 6, 4, 8, 10, 5, 9, 12, 6],
+        "2021": [3, 4, 6, 5, 7, 8, 9, 12, 10, 11, 13, 7],
+        "2022": [4, 6, 8, 7, 10, 9, 12, 14, 11, 13, 15, 9],
+        "2023": [5, 7, 10, 8, 12, 11, 15, 17, 13, 18, 20, 11],
+        "2024": [6, 9, 12, 10, 14, 13, 18, 20, 16, 22, 25, 14]
+    };
+
+    // 🔄 Funktion zur Auswahl der passenden Farben
+    function getHeatmapColor(value) {
+        if (value < 7) return heatmapColors.low;    // Wenig genutzt
+        if (value < 14) return heatmapColors.medium; // Mittel genutzt
+        return heatmapColors.high;                 // Überlastet
+    }
+
+    // 📊 Initiale Heatmap erstellen
+    let selectedYearHeatmap = "2024";
+    let resourceHeatmapCtx = document.getElementById("resourceHeatmap").getContext("2d");
+    let resourceHeatmapChart = new Chart(resourceHeatmapCtx, {
+        type: "bar",
+        data: {
+            labels: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+            datasets: [{
+                label: "Kapazitätsauslastung",
+                data: resourceUsageData[selectedYearHeatmap],
+                backgroundColor: resourceUsageData[selectedYearHeatmap].map(value => getHeatmapColor(value))
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // 🔄 Funktion zur Aktualisierung bei Jahränderung
+    function updateResourceHeatmap() {
+        selectedYearHeatmap = document.getElementById("yearSelectHeatmap").value;
+        resourceHeatmapChart.data.datasets[0].data = resourceUsageData[selectedYearHeatmap];
+        resourceHeatmapChart.data.datasets[0].backgroundColor = resourceUsageData[selectedYearHeatmap].map(value => getHeatmapColor(value));
+        resourceHeatmapChart.update();
+    }
+
+    // 📈 Realistische Auktionszahlen pro Jahr (nicht jeden Monat eine)
+    const auctionData = {
+        "2020": [0, 1, 0, 2, 0, 1, 3, 0, 1, 0, 2, 1], // 11 Auktionen
+        "2021": [1, 0, 2, 1, 0, 3, 2, 1, 0, 2, 1, 1], // 14 Auktionen
+        "2022": [1, 2, 1, 0, 3, 2, 1, 0, 3, 1, 2, 0], // 16 Auktionen
+        "2023": [0, 1, 3, 0, 2, 2, 4, 1, 2, 1, 3, 0], // 19 Auktionen
+        "2024": [2, 0, 2, 1, 3, 2, 3, 0, 2, 1, 4, 2]  // 22 Auktionen
+    };
+
+    // 🔄 Funktion zur Berechnung der Gesamtanzahl
+    function getAuctionTotal(year) {
+        return auctionData[year].reduce((a, b) => a + b, 0);
+    }
+
+    // 📊 Initiales Liniendiagramm für das aktuelle Jahr (2024)
+    let selectedYearAuction = "2024";
+    let auctionTotalElement = document.getElementById("auctionTotal");
+    let auctionCountCtx = document.getElementById("auctionCountChart").getContext("2d");
+
+    let auctionCountChart = new Chart(auctionCountCtx, {
+        type: "line",
+        data: {
+            labels: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+            datasets: [{
+                label: "Anzahl Auktionen",
+                data: auctionData[selectedYearAuction],
+                borderColor: "#0C59CF",
+                backgroundColor: "rgba(12, 89, 207, 0.2)",
+                fill: true,
+                tension: 0.3, // Weiche Linien für eine bessere Visualisierung
+                pointRadius: 5, // Punkte auf der Linie für bessere Lesbarkeit
+                pointBackgroundColor: "#0C59CF",
+                pointBorderColor: "#ffffff"
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, suggestedMax: 5 }
+            },
+            plugins: {
+                legend: {
+                    display: true
+                }
+            }
+        }
+    });
+
+    // 🔄 Funktion zur Aktualisierung des Diagramms bei Jahränderung
+    function updateAuctionCount() {
+        selectedYearAuction = document.getElementById("yearSelectAuktionen").value;
+        auctionCountChart.data.datasets[0].data = auctionData[selectedYearAuction];
+        auctionCountChart.update();
+
+        // 📌 Aktualisiert die Gesamtanzahl als Text
+        auctionTotalElement.innerText = getAuctionTotal(selectedYearAuction);
+    }
+    // 📊 Durchschnittliche Vorbereitungszeiten für verschiedene Jahre
+    const preparationDataByYear = {
+        "2020": {
+            schätzung: [6, 9, 4, 3, 5, 7, 5, 3, 2],
+            marketing: [12, 11, 9, 6, 12, 10, 8, 5, 6],
+            logistik: [4, 7, 10, 5, 5, 3, 2, 3, 4]
+        },
+        "2021": {
+            schätzung: [7, 10, 5, 3, 6, 8, 6, 4, 3],
+            marketing: [13, 12, 10, 7, 13, 11, 9, 6, 7],
+            logistik: [5, 8, 11, 6, 6, 4, 3, 3, 4]
+        },
+        "2022": {
+            schätzung: [7, 10, 5, 3, 6, 8, 6, 4, 3],
+            marketing: [14, 12, 10, 7, 14, 12, 9, 6, 8],
+            logistik: [5, 8, 12, 5, 6, 4, 3, 3, 4]
+        },
+        "2023": {
+            schätzung: [8, 11, 6, 4, 7, 9, 7, 5, 4],
+            marketing: [15, 13, 11, 8, 15, 13, 10, 7, 9],
+            logistik: [6, 9, 13, 6, 7, 5, 4, 4, 5]
+        },
+        "2024": {
+            schätzung: [7, 10, 5, 3, 6, 8, 6, 4, 3],
+            marketing: [14, 12, 10, 7, 14, 12, 9, 6, 8],
+            logistik: [5, 8, 12, 5, 6, 4, 3, 3, 4]
+        }
+    };
+
+    // 🔄 Funktion zur Aktualisierung des Diagramms
+    function updatePreparationChart() {
+        let selectedYear = document.getElementById("yearSelectPreparation").value;
+
+        preparationChart.data.datasets[0].data = preparationDataByYear[selectedYear].schätzung;
+        preparationChart.data.datasets[1].data = preparationDataByYear[selectedYear].marketing;
+        preparationChart.data.datasets[2].data = preparationDataByYear[selectedYear].logistik;
+
+        preparationChart.update();
+    }
+
+    // 📊 Initiales gestapeltes Balkendiagramm für das aktuelle Jahr (2024)
+    let preparationCtx = document.getElementById("preparationTimeChart").getContext("2d");
+    let preparationChart = new Chart(preparationCtx, {
+        type: "bar",
+        data: {
+            labels: ["Gemälde", "Skulpturen", "Möbel", "Keramik", "Moderne Kunst", "Schmuck", "Uhren", "Münzen", "Bücher"],
+            datasets: [
+                {
+                    label: "Schätzung",
+                    data: preparationDataByYear["2024"].schätzung,
+                    backgroundColor: "#0C59CF"
+                },
+                {
+                    label: "Marketing",
+                    data: preparationDataByYear["2024"].marketing,
+                    backgroundColor: "#FEC63D"
+                },
+                {
+                    label: "Logistik",
+                    data: preparationDataByYear["2024"].logistik,
+                    backgroundColor: "#E91E63"
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { stacked: true },
+                y: { stacked: true, title: { display: true, text: "Vorbereitungszeit (Tage)" }, beginAtZero: true }
+            },
+            plugins: {
+                legend: { position: "top" }
+            }
+        }
+    });
+
+    const auctionDurations = {
+        "2020": [[0], [180], [240, 260], [150, 200], [0], [210, 190, 220], [200, 250, 230], [0], [180], [0], [190, 210], [170]],
+        "2021": [[200], [0], [220, 240], [190], [0], [230, 210, 250], [220, 240], [200], [0], [210, 230], [200], [190]],
+        "2022": [[220], [230, 210], [200], [0], [240, 260, 250], [230, 200], [210], [0], [230, 220], [200], [210, 230], [0]],
+        "2023": [[0], [210], [220, 250, 240], [0], [230, 220], [210, 230], [260, 250, 270, 240], [230], [220, 210], [200], [250, 240], [0]],
+        "2024": [[240, 250], [0], [260, 240], [230], [270, 260, 250], [240, 230], [290, 280, 260], [0], [260, 250], [230], [310, 290, 270, 280], [250]]
+    };
+
+    function generateColors(count) {
+        const baseHue = Math.random() * 360;
+        return Array.from({ length: count }, (_, i) => `hsl(${baseHue + i * 15}, 70%, 60%)`);
+    }
+
+    function getAuctionDataset(year) {
+        let datasets = [];
+        let colors = generateColors(auctionDurations[year].length);
+        auctionDurations[year].forEach((month, index) => {
+            month.forEach((duration, auctionIndex) => {
+                datasets.push({
+                    label: `Monat ${index + 1} - Auktion ${auctionIndex + 1}`,
+                    data: Array(12).fill(null).map((_, i) => (i === index ? duration : null)), // Daten korrekt zuordnen
+                    backgroundColor: colors[index % colors.length],
+                    barThickness: 30 // Breitere Balken
+                });
+            });
+        });
+        return datasets;
+    }
+
+    let selectedYearDuration = "2024";
+    let auctionDurationCtx = document.getElementById("auctionDurationChart").getContext("2d");
+
+    let auctionDurationChart = new Chart(auctionDurationCtx, {
+        type: "bar",
+        data: {
+            labels: ["Jan", "Feb", "März", "Apr", "Mai", "Juni", "Juli", "Aug", "Sep", "Okt", "Nov", "Dez"],
+            datasets: getAuctionDataset(selectedYearDuration)
+        },
+        options: {
+            responsive: true,
+            layout: {
+                padding: {
+                    left: 10 // Verschiebt die Balken nach rechts
+                }
+            },
+            scales: {
+                x: {
+                    stacked: false,
+                    align: "center",
+                    barPercentage: 0.6,
+                    categoryPercentage: 0.9,
+                    offset: true
+                },
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: "Dauer in Minuten" }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            let month = context.chart.data.labels[context.dataIndex];
+                            let value = context.raw;
+                            return `${month} - Dauer: ${value} Minuten`;
+                        }
+                    }
+                },
+                legend: { display: false }
+            }
+        }
+    });
+
+    function updateAuctionDurationChart() {
+        selectedYearDuration = document.getElementById("yearSelectDuration").value;
+        auctionDurationChart.data.datasets = getAuctionDataset(selectedYearDuration);
+        auctionDurationChart.update();
+
+        let allDurations = auctionDurations[selectedYearDuration].flat().filter(d => d > 0);
+        let minDuration = Math.min(...allDurations);
+        let maxDuration = Math.max(...allDurations);
+        document.getElementById("shortestAuction").innerText = minDuration;
+        document.getElementById("longestAuction").innerText = maxDuration;
+    }
+
+    updateAuctionDurationChart();
+</script>
+</body>
+</html>

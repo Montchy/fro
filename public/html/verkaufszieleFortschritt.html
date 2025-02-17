@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auktionsziele Übersicht</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <style>
+
+        .progress-container {
+            width: 80%;
+            margin: auto;
+        }
+
+        .progress {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 20px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FEC63D 0%, #ff9a00 100%);
+            transition: width 1s ease-in-out;
+            min-width: 5%;
+            max-width: 200%;
+        }
+
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 2px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            background: #FEC63D;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            font-weight: bold;
+            box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab:hover {
+            background: #E6B21F;
+            transform: translateY(-3px);
+            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .tab.active {
+            background: #0844A4;
+            transform: scale(1.05);
+        }
+
+
+        .month-select {
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid black;
+            border-radius: 8px;
+            background: white;
+            color: black;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            appearance: none;
+            position: relative;
+            width: 150px;
+        }
+
+        .month-select:hover {
+            border-color: #063685;
+        }
+
+        .month-select:focus {
+            outline: none;
+            box-shadow: 0 0 8px rgba(8, 68, 164, 0.4);
+        }
+
+        .select-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .select-container::after {
+            content: '\f107';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 16px;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: black;
+            pointer-events: none;
+        }
+
+
+        #addAuctionBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #ff6600 0%, #ff4500 100%);
+            color: white;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #addAuctionBtn i {
+            font-size: 20px;
+        }
+
+        #addAuctionBtn:hover {
+            background: linear-gradient(135deg, #e65c00 0%, #cc3700 100%);
+            transform: scale(1.1);
+        }
+
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            width: 400px;
+            text-align: center;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .popup h2 {
+            margin-bottom: 20px;
+            font-size: 22px;
+            color: #FEC63D;
+            font-weight: bold;
+        }
+
+        .popup label {
+            display: block;
+            text-align: left;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .popup input, .popup select {
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .popup input:focus, .popup select:focus {
+            border-color: #0844A4;
+            box-shadow: 0 0 8px rgba(8, 68, 164, 0.3);
+        }
+
+        .popup button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            margin-top: 10px;
+        }
+
+        .popup button:first-of-type {
+            background: #FEC63D;
+            color: white;
+        }
+
+        .popup button:first-of-type:hover {
+            background: #FEC63D;
+        }
+
+        .popup button:last-of-type {
+            background: #ddd;
+            color: #333;
+        }
+
+        .popup button:last-of-type:hover {
+            background: #bbb;
+        }
+
+        .popup .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .popup .close-btn:hover {
+            color: #333;
+        }
+
+
+        .progress-fill {
+            height: 100%;
+            background: #FEC63D;
+            transition: width 1s ease-in-out;
+            min-width: 5%;
+            max-width: 200%;
+        }
+
+        .auction-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 10px auto;
+            width: 60%;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: left;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .auction-card:hover {
+            transform: scale(1.05);
+        }
+
+        .auction-card h3 {
+            margin: 0;
+            color: black;
+        }
+
+        .auction-card p {
+            color: #444;
+            font-size: 14px;
+        }
+
+        .progress-icons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 16px;
+            color: black;
+        }
+
+        .progress-icons i {
+            margin-right: 5px;
+        }
+
+        .auction-actions {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .edit-btn, .end-btn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+
+        .edit-btn {
+            background: #FEC63D;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #063685;
+        }
+
+        .end-btn {
+            background: #e63946;
+            color: white;
+        }
+
+        .end-btn:hover {
+            background: #b22b34;
+        }
+
+        /* Bearbeitungs-Popup */
+        #editAuctionPopup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            width: 350px;
+            text-align: center;
+        }
+
+        #editAuctionPopup input {
+            width: 100%;
+            margin: 10px 0;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            background: linear-gradient(135deg, #f5f7fa 0%, #FEC63D 100%);
+        }
+
+        body {
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        #theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #FFFFFF;
+            color: #333;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 16px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #theme-toggle:hover {
+            background-color: #E0A800;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+<div id="particles-js"></div>
+<h1>Auktionsziele inkl. Fortschritt</h1>
+<button id="theme-toggle">🌙</button>
+<button id="addAuctionBtn" onclick="openPopup()"><i class="fas fa-plus"></i> Auktion</button>
+<div class="tabs" id="yearTabs"></div>
+<div class="select-container">
+    <select id="monthSelect" class="month-select" onchange="updateMonthData()"></select>
+</div>
+<div class="progress-container" id="progressContainer"></div>
+
+<div id="auctionPopup" class="popup">
+    <span class="close-btn" onclick="closePopup()">&times;</span>
+    <h2>Neue Auktion hinzufügen</h2>
+    <label>Jahr:</label>
+    <input type="number" id="auctionYear" min="2025">
+    <label>Monat:</label>
+    <select id="auctionMonth">
+        <option value="0">Januar</option>
+        <option value="1">Februar</option>
+        <option value="2">März</option>
+        <option value="3">April</option>
+        <option value="4">Mai</option>
+        <option value="5">Juni</option>
+        <option value="6">Juli</option>
+        <option value="7">August</option>
+        <option value="8">September</option>
+        <option value="9">Oktober</option>
+        <option value="10">November</option>
+        <option value="11">Dezember</option>
+    </select>
+    <label>Auktionsname:</label>
+    <input type="text" id="auctionName">
+    <label>Zielbetrag (€):</label>
+    <input type="number" id="auctionTarget">
+    <button onclick="saveAuction()">Speichern</button>
+    <button onclick="closePopup()">Abbrechen</button>
+</div>
+
+<div id="editAuctionPopup" class="popup">
+    <span class="close-btn" onclick="closeEditPopup()">&times;</span>
+    <h2>Auktion bearbeiten</h2>
+    <label>Auktionsname:</label>
+    <input type="text" id="editAuctionName">
+    <label>Zielbetrag (€):</label>
+    <input type="number" id="editAuctionTarget">
+    <label>Aktueller Fortschritt (€):</label>
+    <input type="number" id="editAuctionProgress">
+    <input type="hidden" id="editAuctionYear">
+    <input type="hidden" id="editAuctionMonth">
+    <input type="hidden" id="editAuctionIndex">
+    <button onclick="saveEditedAuction()">Speichern</button>
+    <button onclick="closeEditPopup()">Abbrechen</button>
+</div>
+
+<script>
+    const auctionData = {
+        "2020": [0, 1, 0, 2, 0, 1, 3, 0, 1, 0, 2, 1],
+        "2021": [1, 0, 2, 1, 0, 3, 2, 1, 0, 2, 1, 1],
+        "2022": [1, 2, 1, 0, 3, 2, 1, 0, 3, 1, 2, 0],
+        "2023": [0, 1, 3, 0, 2, 2, 4, 1, 2, 1, 3, 0],
+        "2024": [2, 0, 2, 1, 3, 2, 3, 0, 2, 1, 4, 2],
+        "2025": [1, 0, 2, 0, 1, 0, 3, 0, 2, 0, 1, 0]
+    };
+
+    const auctionGoals = {
+        "2020": {
+            1: [800000],
+            3: [1200000, 900000],
+            5: [600000],
+            6: [2200000, 1500000, 1800000],
+            8: [750000],
+            10: [1300000, 1100000],
+            11: [900000]
+        },
+        "2021": {
+            0: [950000],
+            2: [1800000, 1200000],
+            3: [1400000],
+            5: [2000000, 1750000, 1600000],
+            6: [1500000, 1300000],
+            9: [1100000, 950000],
+            10: [850000]
+        },
+        "2022": {
+            0: [1200000],
+            1: [1750000, 1450000],
+            2: [950000],
+            4: [2100000, 1600000, 1300000],
+            5: [1400000],
+            8: [1950000, 1500000],
+            9: [1200000],
+            10: [1700000]
+        },
+        "2023": {
+            1: [900000],
+            2: [2500000, 2300000, 1950000],
+            4: [1900000, 1600000],
+            5: [1700000, 1400000],
+            6: [2800000, 2500000, 2000000, 1800000],
+            7: [1300000],
+            8: [1450000, 1350000],
+            9: [1100000],
+            10: [2200000, 2100000, 1750000]
+        },
+        "2024": {
+            0: [2000000, 1850000],
+            2: [2400000, 2100000],
+            3: [1750000],
+            4: [2600000, 2300000, 1900000],
+            5: [2100000, 1950000],
+            6: [3000000, 2700000, 2250000],
+            8: [1800000, 1600000],
+            9: [1500000],
+            10: [3500000, 3250000, 2800000, 2500000],
+            11: [2200000]
+        },
+        "2025":{
+            0: [1500000],
+            2: [2500000, 1800000],
+            4: [1200000],
+            6: [3100000, 2700000, 2200000],
+            8: [1750000, 1600000],
+            10: [2000000]
+        }
+    };
+
+    const auctionNames = {
+        "2020": ["", "Renaissance Art Sale", "", "Modern Masterpieces", "", "Antique Treasures", "Classic Car Auction", "", "Rare Books Sale", "", "Exclusive Fine Jewelry", "Estate Sale"],
+        "2021": ["Contemporary Art", "", "Rare Coin Collection", "Sculpture Showcase", "", "Wine & Spirits Auction", "Photography Auction", "Exclusive Furniture", "", "Collectors Watch Sale", "Historical Artifacts", "Luxury Handbags"],
+        "2022": ["Old Masters Sale", "Sotheby’s Special", "Avant-Garde Art", "", "Fine Art Investment", "Estate Collection", "Retro Car Auction", "", "Jewelry Extravaganza", "Real Estate Auction", "Collectible Comics", ""],
+        "2023": ["", "Numismatic Auction", "Grand Art Showcase", "", "Musical Instruments", "Fashion Icons", "Art Basel Private Sale", "Maritime Art", "Rare Stamps", "Modern Sculptures", "Porcelain Collection", ""],
+        "2024": ["Exclusive Wine Auction", "", "Diamond Collection", "Grand Masters Exhibit", "Rare Watches", "Exclusive Handbags", "Sculpture & Modern Art", "", "Asian Art Collection", "Medieval Artifacts", "Collector’s Showcase", "Estate Jewelry"]
+    };
+
+    auctionNames["2025"] = {
+        0: "Neujahrsauktion",
+        2: "Moderne Kunst & Klassiker",
+        4: "Frühlingsauktion",
+        6: "Sommerhighlights",
+        8: "Herbstsammlung",
+        10: "Winterauktion"
+    };
+
+    function createTabs() {
+        const yearTabs = document.getElementById('yearTabs');
+        const sortedYears = Object.keys(auctionData).map(Number).sort((a, b) => a - b);
+        let firstActiveTab = null;
+
+        sortedYears.forEach(year => {
+            const tab = document.createElement('div');
+            tab.classList.add('tab');
+            tab.innerText = year;
+            tab.onclick = () => showYearData(year, tab);
+            yearTabs.appendChild(tab);
+
+            if (year === 2025) {
+                firstActiveTab = tab;
+            }
+        });
+
+        if (firstActiveTab) {
+            firstActiveTab.classList.add('active');
+            showYearData(2025, firstActiveTab);
+        }
+    }
+
+    function showYearData(year, tab) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const monthSelect = document.getElementById('monthSelect');
+        updateMonthDropdown(year);
+
+        let hasAuctions = false;
+        Object.values(auctionData[year]).forEach(count => {
+            if (count > 0) hasAuctions = true;
+        });
+
+        if (hasAuctions) {
+            let allOption = document.createElement("option");
+            allOption.value = -1;
+            allOption.text = "Alle Auktionen";
+            monthSelect.appendChild(allOption);
+        }
+
+        for (let i = 0; i < 12; i++) {
+            if (auctionData[year][i] > 0) {
+                let option = document.createElement("option");
+                option.value = i;
+                option.text = new Date(2023, i).toLocaleString('default', { month: 'long' });
+                monthSelect.appendChild(option);
+            }
+        }
+        monthSelect.setAttribute("data-year", year);
+        monthSelect.value = -1;
+        updateMonthData();
+    }
+
+    function updateMonthData() {
+        const year = document.getElementById('monthSelect').getAttribute("data-year");
+        const month = parseInt(document.getElementById('monthSelect').value);
+        const progressContainer = document.getElementById('progressContainer');
+        progressContainer.innerHTML = '';
+
+        if (month === -1) {
+            let hasAuctions = false;
+
+            for (let m = 0; m < 12; m++) {
+                if (auctionData[year] && auctionData[year][m] > 0) {
+                    hasAuctions = true;
+                    appendAuctionData(year, m, auctionData[year][m]);
+                }
+            }
+
+            if (!hasAuctions) {
+                progressContainer.innerHTML = `<h3>Keine Auktionen in diesem Jahr</h3>`;
+            }
+        } else {
+            if (auctionData[year] && auctionData[year][month] > 0) {
+                appendAuctionData(year, month, auctionData[year][month]);
+            } else {
+                progressContainer.innerHTML = `<h3>Keine Auktionen in diesem Monat</h3>`;
+            }
+        }
+    }
+    const auctionRevenues = {};
+
+    function appendAuctionData(year, month, auctionCount) {
+        const progressContainer = document.getElementById('progressContainer');
+
+        if (!auctionGoals[year] || !auctionGoals[year][month] || auctionGoals[year][month].length === 0) {
+            return;
+        }
+
+        for (let i = 0; i < auctionCount; i++) {
+            const goalList = auctionGoals[year][month] || [];
+            const auctionData = goalList[i];
+
+            const isEnded = auctionData.ended === true;
+            const goal = auctionData.amount !== undefined ? auctionData.amount : auctionData;
+
+            const auctionKey = `${year}-${month}-${i}`;
+            if (!auctionRevenues[auctionKey]) {
+                auctionRevenues[auctionKey] = Math.floor(Math.random() * (goal * 1.2));
+            }
+            const revenue = auctionRevenues[auctionKey];
+            const percentage = (revenue / goal) * 100;
+
+            const auctionName = auctionNames[year][month] || `Auktion ${i + 1}`;
+
+            const progressDiv = document.createElement('div');
+            progressDiv.classList.add('auction-card');
+
+            progressDiv.innerHTML = `
+            <h3><i class="fas fa-gavel"></i> ${auctionName} (${new Date(2023, month).toLocaleString('default', { month: 'long' })})</h3>
+            <div class='progress'>
+                <div class='progress-fill' style='width: ${Math.min(percentage, 100)}%'></div>
+                <div class='progress-text'>${revenue.toLocaleString()}€ / ${goal.toLocaleString()}€</div>
+            </div>
+            <div class="progress-icons">
+                <span><i class="fas fa-money-bill-wave"></i> Ziel: ${goal.toLocaleString()}€</span>
+                <span><i class="fas fa-chart-line"></i> Fortschritt: ${percentage.toFixed(1)}%</span>
+            </div>
+        `;
+            if (parseInt(year) >= 2025 && !isEnded) {
+                const actionsDiv = document.createElement('div');
+                actionsDiv.classList.add('auction-actions');
+                actionsDiv.innerHTML = `
+        <button class="edit-btn" onclick="editAuction(${year}, ${month}, ${i})">Bearbeiten</button>
+        <button class="end-btn" onclick="endAuction(${year}, ${month}, ${i})">Beenden</button>
+    `;
+                progressDiv.appendChild(actionsDiv);
+            }
+
+            progressContainer.appendChild(progressDiv);
+        }
+    }
+    function endAuction(year, month, index) {
+        if (!confirm("Sind Sie sicher, dass Sie diese Auktion als beendet markieren möchten?")) {
+            return;
+        }
+
+        auctionGoals[year][month][index] = {
+            amount: auctionGoals[year][month][index],
+            ended: true
+        };
+
+        updateMonthData();
+    }
+
+    function editAuction(year, month, index) {
+        document.getElementById("editAuctionName").value = auctionNames[year][month] || `Auktion ${index + 1}`;
+        document.getElementById("editAuctionTarget").value = auctionGoals[year][month][index] || 1000000;
+        document.getElementById("editAuctionProgress").value = auctionRevenues[`${year}-${month}-${index}`] || 0;
+
+        document.getElementById("editAuctionYear").value = year;
+        document.getElementById("editAuctionMonth").value = month;
+        document.getElementById("editAuctionIndex").value = index;
+
+        document.getElementById("editAuctionPopup").style.display = "block";
+    }
+
+    function saveEditedAuction() {
+        let year = document.getElementById("editAuctionYear").value;
+        let month = document.getElementById("editAuctionMonth").value;
+        let index = document.getElementById("editAuctionIndex").value;
+
+        let newName = document.getElementById("editAuctionName").value;
+        let newTarget = parseInt(document.getElementById("editAuctionTarget").value);
+        let newProgress = parseInt(document.getElementById("editAuctionProgress").value);
+
+        if (!newName || isNaN(newTarget) || isNaN(newProgress)) {
+            alert("Ungültige Eingabe! Bitte alle Felder korrekt ausfüllen.");
+            return;
+        }
+
+        auctionNames[year][month] = newName;
+        auctionGoals[year][month][index] = newTarget;
+        auctionRevenues[`${year}-${month}-${index}`] = newProgress;
+
+        closeEditPopup();
+        updateMonthData();
+    }
+
+    function closeEditPopup() {
+        document.getElementById("editAuctionPopup").style.display = "none";
+    }
+
+    function openPopup() {
+        document.getElementById('auctionPopup').style.display = 'block';
+    }
+    function closePopup() {
+        document.getElementById('auctionPopup').style.display = 'none';
+    }
+    function saveAuction() {
+        let year = parseInt(document.getElementById('auctionYear').value);
+        let month = parseInt(document.getElementById('auctionMonth').value);
+        let name = document.getElementById('auctionName').value;
+        let target = parseInt(document.getElementById('auctionTarget').value);
+
+        if (year < 2025 || isNaN(year) || isNaN(target) || name.trim() === '') {
+            alert('Ungültige Eingabe! Jahr muss ab 2025 sein, Name darf nicht leer sein und Zielbetrag muss angegeben werden.');
+            return;
+        }
+
+        if (!auctionData[year]) {
+            auctionData[year] = Array(12).fill(0);
+            auctionGoals[year] = {};
+            auctionNames[year] = {};
+            createYearTab(year);
+        }
+
+        if (!auctionGoals[year][month]) {
+            auctionGoals[year][month] = [];
+            auctionData[year][month] = 0;
+        }
+
+        auctionGoals[year][month].push(target);
+        auctionNames[year][month] = name;
+        auctionData[year][month]++;
+
+        closePopup();
+
+        const yearTabs = document.querySelectorAll('.tab');
+        const yearTab = Array.from(yearTabs).find(tab => tab.innerText.trim() === String(year));
+
+        if (yearTab) {
+            showYearData(year, yearTab);
+        }
+        updateMonthDropdown(year);
+    }
+
+    function createYearTab(year) {
+        const yearTabs = document.getElementById('yearTabs');
+        let existingTabs = Array.from(yearTabs.children).map(tab => parseInt(tab.innerText));
+        if (!existingTabs.includes(year)) {
+            let tab = document.createElement('div');
+            tab.classList.add('tab');
+            tab.innerText = year;
+            tab.onclick = () => showYearData(year, tab);
+            let index = existingTabs.findIndex(y => y > year);
+            if (index === -1) {
+                let index = existingTabs.findIndex(y => y > year);
+                if (index === -1) {
+                    yearTabs.appendChild(tab);
+                } else {
+                    yearTabs.insertBefore(tab, yearTabs.children[index]);
+                }
+
+            } else {
+                yearTabs.insertBefore(tab, yearTabs.children[index]);
+            }
+        }
+    }
+
+    function updateMonthDropdown(year) {
+        const monthSelect = document.getElementById('monthSelect');
+        monthSelect.innerHTML = '<option value="-1">Alle Auktionen</option>';
+
+        for (let i = 0; i < 12; i++) {
+            let option = document.createElement("option");
+            option.value = i;
+            option.text = new Date(2023, i).toLocaleString('default', { month: 'long' });
+            monthSelect.appendChild(option);
+        }
+
+        monthSelect.setAttribute("data-year", year);
+    }
+
+    particlesJS("particles-js", {
+        particles: {
+            number: {
+                value: 100,
+                density: {
+                    enable: true,
+                    value_area: 800
+                }
+            },
+            color: {
+                value: "#ffffff"
+            },
+            shape: {
+                type: "circle",
+                stroke: {
+                    width: 0
+                }
+            },
+            opacity: {
+                value: 0.5,
+                random: false
+            },
+            size: {
+                value: 3,
+                random: true
+            },
+            line_linked: {
+                enable: true,
+                distance: 150,
+                color: "#ffffff",
+                opacity: 0.4,
+                width: 1
+            },
+            move: {
+                enable: true,
+                speed: 2,
+                direction: "none",
+                random: false,
+                straight: false,
+                out_mode: "out",
+                bounce: false
+            }
+        },
+        interactivity: {
+            detect_on: "canvas",
+            events: {
+                onhover: {
+                    enable: true,
+                    mode: "grab"
+                },
+                onclick: {
+                    enable: true,
+                    mode: "push"
+                },
+                resize: true
+            }
+        },
+        retina_detect: true
+    });
+
+    const themeToggle = document.getElementById("theme-toggle");
+    let isDarkMode = false;
+
+    function toggleTheme() {
+        if (!isDarkMode) {
+            // Dark Mode aktivieren
+            document.body.style.background = "#0C59CF";
+            document.body.style.color = "#FFFFFF";
+            document.querySelector("#particles-js").style.background =
+                "linear-gradient(135deg, #0844A4 0%, #75A9F9 100%)";
+            document.querySelector("#addAuctionBtn").style.background =
+                "#0844A4";
+            document.querySelector("#addAuctionBtn").style.color = "#FFFFFF";
+
+            // Für Fortschrittsbalken im Dark Mode
+            document.querySelectorAll(".progress").forEach(progress => {
+                progress.style.background = "#155ce0";
+            });
+
+            document.querySelectorAll(".progress-fill").forEach(fill => {
+                fill.style.background = "#093475";
+            });
+
+            document.querySelectorAll(".auction-card").forEach(card => {
+                card.style.background = "#0844A4";
+                card.style.color = "#FFFFFF";
+                card.style.boxShadow = "0px 4px 8px rgba(0, 0, 0, 0.6)";
+            });
+            document.querySelector(".month-select").style.background = "#0844A4";
+            document.querySelector(".month-select").style.color = "#FFFFFF";
+            document.querySelector(".month-select").style.border = "2px solid #75A9F9";
+            document.querySelectorAll(".progress-text").forEach(text => {
+                text.style.color = "#FFFFFF";
+            });
+
+            document.querySelectorAll(".auction-card h3").forEach(title => {
+                title.style.color = "#FFFFFF";
+            });
+
+            document.querySelectorAll(".auction-card p").forEach(paragraph => {
+                paragraph.style.color = "#FFFFFF";
+            });
+
+            document.querySelectorAll(".progress-icons span").forEach(span => {
+                span.style.color = "#FFFFFF";
+            });
+            // Modal-Styling
+            document.querySelectorAll(".popup").forEach(modal => {
+                modal.style.backgroundColor = "#0844A4";
+                modal.style.color = "#FFFFFF";
+                modal.style.boxShadow = "0px 4px 8px rgba(0, 0, 0, 0.6)";
+            });
+
+            document.querySelectorAll(".popup input, .popup select").forEach(input => {
+                input.style.backgroundColor = "#155ce0";
+                input.style.color = "#FFFFFF";
+                input.style.border = "2px solid #75A9F9";
+            });
+
+            document.querySelectorAll(".popup button:first-of-type").forEach(button => {
+                button.style.backgroundColor = "#75A9F9";
+                button.style.color = "#FFFFFF";
+                button.style.border = "none";
+            });
+
+            document.querySelectorAll(".popup button:last-of-type").forEach(button => {
+                button.style.backgroundColor = "#555555";
+                button.style.color = "#FFFFFF";
+                button.style.border = "none";
+            });
+
+            document.querySelectorAll(".edit-btn").forEach(button => {
+                button.style.backgroundColor = "#75A9F9";
+                button.style.color = "#FFFFFF";
+                button.style.border = "2px solid #093475";
+            });
+
+            document.querySelectorAll(".popup h2").forEach(heading => {
+                heading.style.color = "#FFFFFF";
+            });
+
+            document.querySelectorAll(".popup label").forEach(label => {
+                label.style.color = "#FFFFFF";
+            });
+            document.querySelectorAll(".tab").forEach(tab => {
+                tab.style.background = "#75A9F9";
+                tab.style.color = "#FFFFFF";
+            });
+            document.querySelector(".tab.active").style.background = "#0844A4";
+            themeToggle.style.backgroundColor = "#0844A4";
+            themeToggle.style.color = "#FFFFFF";
+            themeToggle.onmouseover = () => themeToggle.style.backgroundColor = "#0844A4";
+            themeToggle.onmouseout = () => themeToggle.style.backgroundColor = "#0C59CF";
+            themeToggle.textContent = "☀️";
+        } else {
+            document.body.style.background = "#f5f7fa";
+            document.body.style.color = "#333";
+            document.querySelector("#particles-js").style.background =
+                "linear-gradient(135deg, #f5f7fa 0%, #FEC63D 100%)";
+            document.querySelector("#addAuctionBtn").style.background =
+                "linear-gradient(135deg, #ff6600 0%, #ff4500 100%)";
+            document.querySelector("#addAuctionBtn").style.color = "white";
+            document.querySelectorAll(".progress").forEach(progress => {
+                progress.style.background = "#e0e0e0";
+            });
+
+            document.querySelectorAll(".tab").forEach(tab => {
+                tab.style.background = "#FEC63D";
+                tab.style.color = "#FFFFFF";
+            });
+            document.querySelector(".tab.active").style.background = "#E6B21F";
+
+            document.querySelectorAll(".progress-fill").forEach(fill => {
+                fill.style.background = "linear-gradient(90deg, #FEC63D 0%, #ff9a00 100%)";
+            });
+            document.querySelectorAll(".auction-card").forEach(card => {
+                card.style.background = "white";
+                card.style.color = "black";
+                card.style.boxShadow = "0px 4px 8px rgba(0, 0, 0, 0.2)";
+            });
+            document.querySelectorAll(".progress-text").forEach(text => {
+                text.style.color = "#333333";
+            });
+
+            document.querySelectorAll(".auction-card h3").forEach(title => {
+                title.style.color = "black";
+            });
+
+            document.querySelectorAll(".auction-card p").forEach(paragraph => {
+                paragraph.style.color = "#444444";
+            });
+
+            document.querySelectorAll(".progress-icons span").forEach(span => {
+                span.style.color = "black";
+            });
+
+            document.querySelector(".month-select").style.background = "white";
+            document.querySelector(".month-select").style.color = "black";
+            document.querySelector(".month-select").style.border = "2px solid black";
+
+            document.querySelectorAll(".popup").forEach(modal => {
+                modal.style.backgroundColor = "white";
+                modal.style.color = "#333";
+                modal.style.boxShadow = "0px 4px 8px rgba(0, 0, 0, 0.2)";
+            });
+
+            document.querySelectorAll(".popup input, .popup select").forEach(input => {
+                input.style.backgroundColor = "white";
+                input.style.color = "#333";
+                input.style.border = "2px solid #ccc";
+            });
+
+            document.querySelectorAll(".popup button:first-of-type").forEach(button => {
+                button.style.backgroundColor = "#FEC63D";
+                button.style.color = "#FFFFFF";
+                button.style.border = "none";
+            });
+
+            document.querySelectorAll(".popup button:last-of-type").forEach(button => {
+                button.style.backgroundColor = "#ddd";
+                button.style.color = "#333";
+                button.style.border = "none";
+            });
+
+            document.querySelectorAll(".popup h2").forEach(heading => {
+                heading.style.color = "#333333";
+            });
+
+            document.querySelectorAll(".popup label").forEach(label => {
+                label.style.color = "#333333";
+            });
+
+            document.querySelectorAll(".edit-btn").forEach(button => {
+                button.style.backgroundColor = "#FEC63D";
+                button.style.color = "#FFFFFF";
+                button.style.border = "none";
+            });
+            themeToggle.style.backgroundColor = "#FFFFFF";
+            themeToggle.style.color = "#333";
+            themeToggle.onmouseover = () => themeToggle.style.backgroundColor = "#E0A800";
+            themeToggle.onmouseout = () => themeToggle.style.backgroundColor = "#FFFFFF";
+            themeToggle.textContent = "🌙";
+        }
+        isDarkMode = !isDarkMode;
+    }
+    themeToggle.addEventListener("click", toggleTheme);
+
+    createTabs();
+    updateMonthDropdown(year);
+    showYearData("2020", document.querySelector('.tab'));
+</script>
+</body>
+</html>
