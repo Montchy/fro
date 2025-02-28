@@ -7,6 +7,7 @@ const PriceSuggestionChatbot = ({ darkMode, isEnglish }) => {
   ]);
   const [inputValue, setInputValue] = useState("");
   const [history, setHistory] = useState([]); // Historie der Fragen und Antworten
+  const [selectedHistory, setSelectedHistory] = useState(null); // Ausgewählte Historie für Details
 
   // Beim Laden der Komponente gespeicherte Historie laden
   useEffect(() => {
@@ -22,15 +23,15 @@ const PriceSuggestionChatbot = ({ darkMode, isEnglish }) => {
   }, [history]);
 
   // Nachricht senden
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (inputValue.trim() === "") return;
 
     // Benutzernachricht hinzufügen
     const userMessage = { text: inputValue, isUser: true };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
 
-    // KI-Antwort generieren
-    const botMessage = { text: getPriceSuggestion(inputValue), isUser: false };
+    // KI-Antwort aus dem Internet generieren (simuliert)
+    const botMessage = { text: await fetchPriceSuggestion(inputValue), isUser: false };
     setMessages((prevMessages) => [...prevMessages, botMessage]);
 
     // Frage und Antwort zur Historie hinzufügen
@@ -43,40 +44,20 @@ const PriceSuggestionChatbot = ({ darkMode, isEnglish }) => {
     setInputValue("");
   };
 
-  // Preisvorschlag generieren
-  const getPriceSuggestion = (description) => {
-    const keywords = [
-      { keyword: "ring", basePrice: 500 },
-      { keyword: "kette", basePrice: 300 },
-      { keyword: "armband", basePrice: 200 },
-      { keyword: "uhr", basePrice: 1000 },
-      { keyword: "antik", basePrice: 1500 },
-      { keyword: "sammlerstück", basePrice: 2000 },
-    ];
-
-    let price = 0;
-    let matchedKeyword = null;
-
-    // Überprüfen, ob ein Schlüsselwort in der Beschreibung enthalten ist
-    for (const item of keywords) {
-      if (description.toLowerCase().includes(item.keyword)) {
-        matchedKeyword = item.keyword;
-        price = item.basePrice;
-        break;
-      }
-    }
-
-    if (matchedKeyword) {
-      const variation = Math.random() * 0.5 + 0.75;
-      price = Math.round(price * variation);
-      return isEnglish
-        ? `Based on your description ("${matchedKeyword}"), I suggest a price of around ${price}€.`
-        : `Basierend auf deiner Beschreibung ("${matchedKeyword}") schlage ich einen Preis von ca. ${price}€ vor.`;
-    } else {
-      return isEnglish
-        ? "I couldn't find a matching product in your description. Please provide more details."
-        : "Ich konnte kein passendes Produkt in deiner Beschreibung finden. Bitte gib mehr Details an.";
-    }
+  // Preisvorschlag aus dem Internet (simuliert)
+  const fetchPriceSuggestion = async (description) => {
+    // Hier könntest du eine echte API wie OpenAI oder eine Preisdatenbank verwenden
+    // Dies ist nur eine Simulation
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const price = Math.floor(Math.random() * 1000) + 100; // Zufälliger Preis
+        resolve(
+          isEnglish
+            ? `Based on your description, I suggest a price of around ${price}€.`
+            : `Basierend auf deiner Beschreibung schlage ich einen Preis von ca. ${price}€ vor.`
+        );
+      }, 1000); // Simuliere eine API-Antwortzeit von 1 Sekunde
+    });
   };
 
   // Enter-Taste zum Senden der Nachricht
@@ -84,6 +65,11 @@ const PriceSuggestionChatbot = ({ darkMode, isEnglish }) => {
     if (event.key === "Enter") {
       sendMessage();
     }
+  };
+
+  // Ausgewählte Historie anzeigen
+  const showHistoryDetails = (index) => {
+    setSelectedHistory(history[index]);
   };
 
   return (
@@ -134,12 +120,30 @@ const PriceSuggestionChatbot = ({ darkMode, isEnglish }) => {
         {history.length === 0 ? (
           <p>{isEnglish ? "No history yet." : "Noch keine Historie vorhanden."}</p>
         ) : (
-          history.map((item, index) => (
-            <div key={index} style={{ marginBottom: "20px" }}>
-              <p><strong>{isEnglish ? "Question" : "Frage"}:</strong> {item.question}</p>
-              <p><strong>{isEnglish ? "Answer" : "Antwort"}:</strong> {item.answer}</p>
-            </div>
-          ))
+          <div>
+            {history.map((item, index) => (
+              <div
+                key={index}
+                style={{ marginBottom: "10px", cursor: "pointer", padding: "10px", borderBottom: darkMode ? "1px solid #444" : "1px solid #ddd" }}
+                onClick={() => showHistoryDetails(index)}
+              >
+                <p style={{ margin: 0 }}><strong>{isEnglish ? "Q" : "F"}:</strong> {item.question}</p>
+                <p style={{ margin: 0 }}><strong>{isEnglish ? "A" : "A"}:</strong> {item.answer.substring(0, 50)}...</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Details der ausgewählten Historie */}
+        {selectedHistory && (
+          <div style={{ marginTop: "20px" }}>
+            <h4>{isEnglish ? "Details" : "Details"}</h4>
+            <p><strong>{isEnglish ? "Question" : "Frage"}:</strong> {selectedHistory.question}</p>
+            <p><strong>{isEnglish ? "Answer" : "Antwort"}:</strong> {selectedHistory.answer}</p>
+            <button onClick={() => setSelectedHistory(null)} style={{ ...styles.sendButton, backgroundColor: darkMode ? "#E0A800" : "#E0A800", color: darkMode ? "#000000" : "#ffffff" }}>
+              {isEnglish ? "Close" : "Schließen"}
+            </button>
+          </div>
         )}
       </div>
     </div>
