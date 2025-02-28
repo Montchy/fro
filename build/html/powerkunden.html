@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VIP-Kunden-Tracking</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -195,6 +196,17 @@
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
             transform: translateY(-2px);
         }
+
+        #particles-js {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            background: linear-gradient(135deg, #f5f7fa 0%, #FEC63D 100%);
+        }
+
     </style>
 </head>
 <body>
@@ -203,6 +215,7 @@
     <h1>VIP-Kunden-Tracking</h1>
     <button id="theme-toggle">🌙</button>
 </div>
+<div id="particles-js"></div>
 <a href="details.html" class="navigate-button">Mehr zu den VIP-Kunden erfahren</a>
 <div class="container">
     <div class="chart-and-info">
@@ -397,8 +410,8 @@
             document.querySelector(".close-button").style.color = "#FFFFFF";
             document.querySelector(".close-button").onmouseover = () => document.querySelector(".close-button").style.backgroundColor = "#0C59CF";
             document.querySelector(".close-button").onmouseout = () => document.querySelector(".close-button").style.backgroundColor = "#0844A4";
-
-
+            document.getElementById("particles-js").style.background =
+                "linear-gradient(135deg, #0844A4 0%, #75A9F9 100%)";
             themeToggle.textContent = "☀️";
             themeToggle.style.backgroundColor = "#0C59CF";
             themeToggle.style.color = "#FFFFFF";
@@ -421,6 +434,8 @@
             document.querySelectorAll(".info-button").forEach(btn => {
                 btn.style.backgroundColor = "#FFD783";
             });
+            document.getElementById("particles-js").style.background =
+                "linear-gradient(135deg, #f5f7fa 0%, #FEC63D 100%)";
             vipChart.options.plugins.legend.labels.color = "#000000";
             vipChart.options.scales.x.title.color = "#000000";
             vipChart.options.scales.y.title.color = "#000000";
@@ -462,6 +477,66 @@
         darkMode = !darkMode;
     }
     themeToggle.addEventListener("click", toggleTheme);
+
+    particlesJS("particles-js", {
+        particles: {
+            number: {
+                value: 100,
+                density: {
+                    enable: true,
+                    value_area: 800
+                }
+            },
+            color: {
+                value: "#ffffff"
+            },
+            shape: {
+                type: "circle",
+                stroke: {
+                    width: 0
+                }
+            },
+            opacity: {
+                value: 0.5,
+                random: false
+            },
+            size: {
+                value: 3,
+                random: true
+            },
+            line_linked: {
+                enable: true,
+                distance: 150,
+                color: "#ffffff",
+                opacity: 0.4,
+                width: 1
+            },
+            move: {
+                enable: true,
+                speed: 2,
+                direction: "none",
+                random: false,
+                straight: false,
+                out_mode: "out",
+                bounce: false
+            }
+        },
+        interactivity: {
+            detect_on: "canvas",
+            events: {
+                onhover: {
+                    enable: true,
+                    mode: "grab"
+                },
+                onclick: {
+                    enable: true,
+                    mode: "push"
+                },
+                resize: true
+            }
+        },
+        retina_detect: true
+    });
 </script>
 </body>
 </html>

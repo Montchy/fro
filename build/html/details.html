@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VIP-Kunden-Details</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -157,6 +158,15 @@
             transform: translateY(-2px);
         }
 
+        #particles-js {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            background: linear-gradient(135deg, #f5f7fa 0%, #FEC63D 100%);
+        }
     </style>
 </head>
 <body>
@@ -164,7 +174,7 @@
 <div class="header">
     <h1>Details zu VIP-Kunden</h1>
 </div>
-
+<div id="particles-js"></div>
 <div class="container">
     <a href="powerkunden.html" class="navigate-button">Zurück</a>
 
@@ -649,7 +659,8 @@
             document.querySelector("#customerSelect").style.backgroundColor = "#0844A4";
             document.querySelector("#customerSelect").style.color = "#FFFFFF";
             document.querySelector("#customerSelect").style.borderColor = "#FFFFFF";
-
+            document.getElementById("particles-js").style.background =
+                "linear-gradient(135deg, #0844A4 0%, #75A9F9 100%)";
             preferencesChart.options.plugins.legend.labels.color = "#FFFFFF";
             preferencesChart.options.plugins.legend.title.color = "#FFFFFF";
             preferencesChart.update();
@@ -685,7 +696,8 @@
                 td.style.backgroundColor = "#FFFFFF";
                 td.style.color = "#000000";
             });
-
+            document.getElementById("particles-js").style.background =
+                "linear-gradient(135deg, #f5f7fa 0%, #FEC63D 100%)";
             document.querySelector(".container").style.backgroundColor = "#FFFFFF";
             document.querySelector(".container").style.color = "#000000";
 
@@ -718,8 +730,68 @@
         }
         darkMode = !darkMode;
     }
-
     updatePurchaseHistory();
+
+    particlesJS("particles-js", {
+        particles: {
+            number: {
+                value: 100,
+                density: {
+                    enable: true,
+                    value_area: 800
+                }
+            },
+            color: {
+                value: "#ffffff"
+            },
+            shape: {
+                type: "circle",
+                stroke: {
+                    width: 0
+                }
+            },
+            opacity: {
+                value: 0.5,
+                random: false
+            },
+            size: {
+                value: 3,
+                random: true
+            },
+            line_linked: {
+                enable: true,
+                distance: 150,
+                color: "#ffffff",
+                opacity: 0.4,
+                width: 1
+            },
+            move: {
+                enable: true,
+                speed: 2,
+                direction: "none",
+                random: false,
+                straight: false,
+                out_mode: "out",
+                bounce: false
+            }
+        },
+        interactivity: {
+            detect_on: "canvas",
+            events: {
+                onhover: {
+                    enable: true,
+                    mode: "grab"
+                },
+                onclick: {
+                    enable: true,
+                    mode: "push"
+                },
+                resize: true
+            }
+        },
+        retina_detect: true
+    });
+
 </script>
 
 </body>

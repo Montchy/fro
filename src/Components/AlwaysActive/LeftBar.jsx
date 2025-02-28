@@ -22,6 +22,7 @@ const LeftBar = ({ darkMode }) => {  // Dark Mode als Prop empfangen
         { image: bild5, route: '/gallery' },
         { image: auk6, route: '/auction' },
         { image: gra7, route: '/graphs' },
+        { image: gra7, route: '/chatbot' },
     ];
 
     const handleMouseEnter = (index) => {

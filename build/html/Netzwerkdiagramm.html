@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Netzwerk der Käufer-Verkäufer-Beziehungen im Kunst- und Antiquitätenhandel</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -142,14 +143,22 @@
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
             transform: translateY(-2px);
         }
-
+        #particles-js {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            background: linear-gradient(135deg, #f5f7fa 0%, #FEC63D 100%);
+        }
 
     </style>
 </head>
 <body>
 <h1>Netzwerk der Käufer-Verkäufer-Beziehungen im Kunst- und Antiquitätenhandel</h1>
 <button id="theme-toggle">🌙</button>
-
+<div id="particles-js"></div>
 <div id="controls">
     <select id="view-selector" onchange="updateView()">
         <option value="all">Alle Beziehungen</option>
@@ -489,6 +498,8 @@
                 box.style.color = "#FFFFFF";
                 box.style.borderColor = "#FFFFFF";
             });
+            document.getElementById("particles-js").style.background =
+                "linear-gradient(135deg, #0844A4 0%, #75A9F9 100%)";
             document.querySelectorAll(".legend-box strong").forEach(el => el.style.color = "#FFFFFF");
             themeToggle.style.backgroundColor = "#0844A4";
             themeToggle.style.color = "#FFFFFF";
@@ -511,6 +522,8 @@
                 box.style.color = "#555";
                 box.style.borderColor = "#ccc";
             });
+            document.getElementById("particles-js").style.background =
+                "linear-gradient(135deg, #f5f7fa 0%, #FEC63D 100%)";
             document.querySelectorAll(".legend-box strong").forEach(el => el.style.color = "#000000");
             themeToggle.style.backgroundColor = "#FFFFFF";
             themeToggle.style.color = "#333";
@@ -522,6 +535,65 @@
     }
     themeToggle.addEventListener("click", toggleTheme);
     renderAll();
+    particlesJS("particles-js", {
+        particles: {
+            number: {
+                value: 100,
+                density: {
+                    enable: true,
+                    value_area: 800
+                }
+            },
+            color: {
+                value: "#ffffff"
+            },
+            shape: {
+                type: "circle",
+                stroke: {
+                    width: 0
+                }
+            },
+            opacity: {
+                value: 0.5,
+                random: false
+            },
+            size: {
+                value: 3,
+                random: true
+            },
+            line_linked: {
+                enable: true,
+                distance: 150,
+                color: "#ffffff",
+                opacity: 0.4,
+                width: 1
+            },
+            move: {
+                enable: true,
+                speed: 2,
+                direction: "none",
+                random: false,
+                straight: false,
+                out_mode: "out",
+                bounce: false
+            }
+        },
+        interactivity: {
+            detect_on: "canvas",
+            events: {
+                onhover: {
+                    enable: true,
+                    mode: "grab"
+                },
+                onclick: {
+                    enable: true,
+                    mode: "push"
+                },
+                resize: true
+            }
+        },
+        retina_detect: true
+    });
 </script>
 </body>
 </html>

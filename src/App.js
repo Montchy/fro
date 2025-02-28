@@ -11,6 +11,7 @@ import Graphs from "./Components/Graphs";
 import LeftBar from "./Components/AlwaysActive/LeftBar";
 import TopBar from './Components/AlwaysActive/TopBar';
 import Search from './Components/Search';
+import PriceSuggestionChatbot from "./Components/Chatbot";
 import Login from "./Components/Login";
 import PersonDetail from './Components/FurtherInformation/PersonDetail';
 import { StyleSheet, View } from 'react-native';
@@ -59,6 +60,8 @@ function App() {
                                     <Route path="/search" element={<Search darkMode={darkMode} isEnglish={isEnglish} />} />
                                     <Route path="/auction" element={<Auction darkMode={darkMode} isEnglish={isEnglish} />} />
                                     <Route path="/graphs" element={<Graphs darkMode={darkMode} isEnglish={isEnglish} />} />
+                                    <Route path="/chatbot" element={<PriceSuggestionChatbot darkMode={darkMode} isEnglish={isEnglish} />} />
+
                                 </Routes>
                             </View>
                         </View>
@@ -78,5 +81,6 @@ const stylesContainers = StyleSheet.create({
     lightBg: { backgroundColor: "#FFFFFF" }, // Heller Modus
     darkBg: { backgroundColor: "rgb(18, 18, 18)" }, // Dark Mode Hintergrund
 });
+
 
 export default App;
