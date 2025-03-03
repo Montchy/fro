@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from "react";
 
 const PriceSuggestionChatbot = ({ darkMode, isEnglish }) => {
-  // Zustand für Nachrichten und Historie
   const [messages, setMessages] = useState([
     { text: isEnglish ? "Hello! Describe your product (e.g., jewelry, antiques, etc.), and I'll give you a price suggestion." : "Hallo! Beschreibe mir dein Produkt (z. B. Schmuck, Antiquitäten, etc.), und ich mache dir einen Preisvorschlag.", isUser: false },
   ]);
   const [inputValue, setInputValue] = useState("");
-  const [history, setHistory] = useState([]); // Historie der Fragen und Antworten
-  const [selectedHistory, setSelectedHistory] = useState(null); // Ausgewählte Historie für Details
-
-  // Beim Laden der Komponente gespeicherte Historie laden
+  const [history, setHistory] = useState([]); 
+  const [selectedHistory, setSelectedHistory] = useState(null); 
   useEffect(() => {
     const savedHistory = localStorage.getItem("chatHistory");
     if (savedHistory) {
@@ -17,57 +14,47 @@ const PriceSuggestionChatbot = ({ darkMode, isEnglish }) => {
     }
   }, []);
 
-  // Historie speichern, wenn sie sich ändert
   useEffect(() => {
     localStorage.setItem("chatHistory", JSON.stringify(history));
   }, [history]);
 
-  // Nachricht senden
   const sendMessage = async () => {
     if (inputValue.trim() === "") return;
 
-    // Benutzernachricht hinzufügen
     const userMessage = { text: inputValue, isUser: true };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
 
-    // KI-Antwort aus dem Internet generieren (simuliert)
     const botMessage = { text: await fetchPriceSuggestion(inputValue), isUser: false };
     setMessages((prevMessages) => [...prevMessages, botMessage]);
 
-    // Frage und Antwort zur Historie hinzufügen
     setHistory((prevHistory) => [
       ...prevHistory,
       { question: inputValue, answer: botMessage.text },
     ]);
 
-    // Eingabefeld leeren
     setInputValue("");
   };
 
-  // Preisvorschlag aus dem Internet (simuliert)
   const fetchPriceSuggestion = async (description) => {
-    // Hier könntest du eine echte API wie OpenAI oder eine Preisdatenbank verwenden
-    // Dies ist nur eine Simulation
+   
     return new Promise((resolve) => {
       setTimeout(() => {
-        const price = Math.floor(Math.random() * 1000) + 100; // Zufälliger Preis
+        const price = Math.floor(Math.random() * 1000) + 100; 
         resolve(
           isEnglish
             ? `Based on your description, I suggest a price of around ${price}€.`
             : `Basierend auf deiner Beschreibung schlage ich einen Preis von ca. ${price}€ vor.`
         );
-      }, 1000); // Simuliere eine API-Antwortzeit von 1 Sekunde
+      }, 1000); 
     });
   };
 
-  // Enter-Taste zum Senden der Nachricht
   const handleKeyPress = (event) => {
     if (event.key === "Enter") {
       sendMessage();
     }
   };
 
-  // Ausgewählte Historie anzeigen
   const showHistoryDetails = (index) => {
     setSelectedHistory(history[index]);
   };

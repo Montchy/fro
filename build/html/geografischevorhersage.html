@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geografische Nachfragevorhersage Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-statistics@7.8.1/dist/simple-statistics.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9fafb;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header button {
+            background-color: #E0A800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .header button:hover {
+            background-color: #d39e00;
+        }
+
+        .dark-mode-toggle {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #E0A800;
+        }
+
+        .dark-mode-toggle:hover {
+            color: #d39e00;
+        }
+
+        .dark-mode .dark-mode-toggle {
+            color: #ffffff;
+        }
+
+        .card {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .dark-mode .card {
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            color: #E0A800;
+            margin-bottom: 10px;
+        }
+
+        .dark-mode .card h2 {
+            color: #E0A800;
+        }
+
+        .card p {
+            font-size: 0.875rem;
+            color: #4B5563;
+            margin-bottom: 20px;
+        }
+
+        .dark-mode .card p {
+            color: #a0a0a0;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: 300px;
+        }
+
+        select {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            outline: none;
+            transition: 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .dark-mode select {
+            background-color: #333;
+            border-color: #555;
+            color: #ffffff;
+        }
+
+        select:hover {
+            border-color: #E0A800;
+        }
+
+        select:focus {
+            border-color: #E0A800;
+            box-shadow: 0px 0px 5px rgba(224, 168, 0, 0.5);
+        }
+
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #E0A800;
+            color: white;
+        }
+
+        .dark-mode th {
+            background-color: #1e1e1e;
+            border-color: #555;
+        }
+
+        .dark-mode td {
+            border-color: #555;
+        }
+
+        .slider-container {
+            margin-bottom: 20px;
+        }
+
+        .slider-container label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .alert {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.warning {
+            background-color: #ffcc00;
+            color: #000;
+        }
+
+        .alert.success {
+            background-color: #4caf50;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Header mit Zurück-Button und Dark-Mode-Toggle -->
+    <div class="header">
+       <a href="map.html">
+            <button>
+               Zurück
+            </button>
+        </a>
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙</button>
+    </div>
+
+    <!-- Karte -->
+    <div class="card">
+        <h2>Geografische Nachfragevorhersage</h2>
+        <div id="map"></div>
+    </div>
+
+    <!-- Optionen und Tabelle -->
+    <div class="card">
+        <h2>Verkaufsdaten nach Region</h2>
+        <select id="categorySelector" onchange="updateMapAndCharts()">
+            <option value="Kunst">Kunst</option>
+            <option value="Schmuck">Schmuck</option>
+            <option value="Antiquitäten">Antiquitäten</option>
+            <option value="Raritäten">Raritäten</option>
+            <option value="Sammlerstücke">Sammlerstücke</option>
+            <option value="Möbel">Möbel</option>
+        </select>
+        <table id="salesTable">
+            <thead>
+                <tr>
+                    <th>Region</th>
+                    <th>Kategorie</th>
+                    <th>Anzahl Verkäufe</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Interaktive Prognosen -->
+    <div class="card">
+        <h2>Interaktive Prognosen</h2>
+        <div class="slider-container">
+            <label for="forecastYears">Anzahl Prognosejahre:</label>
+            <input type="range" id="forecastYears" min="1" max="10" value="5" oninput="updateForecastYears(this.value)">
+            <span id="forecastYearsValue">5</span>
+        </div>
+        <div class="slider-container">
+            <label for="smoothingFactor">Glättungsfaktor:</label>
+            <input type="range" id="smoothingFactor" min="0.1" max="1" step="0.1" value="0.5" oninput="updateSmoothingFactor(this.value)">
+            <span id="smoothingFactorValue">0.5</span>
+        </div>
+    </div>
+
+    <!-- Diagramme -->
+    <div class="card">
+        <h2>Nachfragevorhersage</h2>
+        <canvas id="predictionChart"></canvas>
+    </div>
+
+    <div class="card">
+        <h2>Verkaufsdaten nach Jahr</h2>
+        <canvas id="salesChart"></canvas>
+    </div>
+
+    <!-- Benachrichtigungssystem -->
+    <div class="alert" id="alert">
+        <span id="alertMessage"></span>
+    </div>
+
+    <!-- Download-Funktion -->
+    <div class="card">
+        <h2>Download Prognosedaten</h2>
+        <button onclick="downloadCSV()">Als CSV herunterladen</button>
+    </div>
+</div>
+
+<script>
+    const categories = ["Kunst", "Schmuck", "Antiquitäten", "Raritäten", "Sammlerstücke", "Möbel"];
+    const regions = ['Niederösterreich', 'Wien', 'Steiermark', 'Burgenland', 'Tirol', 'Vorarlberg', 'Oberösterreich', 'Salzburg', 'Kärnten'];
+    let salesData = Array.from({ length: 100 }, () => ({
+        region: regions[Math.floor(Math.random() * regions.length)],
+        category: categories[Math.floor(Math.random() * categories.length)],
+        sales: Math.floor(Math.random() * 100) + 1,
+        lat: 46 + Math.random() * 4,
+        lng: 9 + Math.random() * 8,
+        year: Math.floor(Math.random() * 5) + 2020 // Zufälliges Jahr zwischen 2020 und 2024
+    }));
+
+    // Karte initialisieren
+    const map = L.map('map').setView([47.5, 14.5], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    let predictionChart, salesChart;
+    let forecastYears = 5;
+
+    function updateMapAndCharts() {
+        const selectedCategory = document.getElementById('categorySelector').value;
+
+        // Filterdaten auf Basis der ausgewählten Kategorie
+        let filteredData = salesData.filter(d => d.category === selectedCategory);
+
+        // Aktualisierung der Karte
+        map.eachLayer(function (layer) {
+            if (layer instanceof L.CircleMarker) {
+                map.removeLayer(layer);
+            }
+        });
+
+        filteredData.forEach(location => {
+            L.circleMarker([location.lat, location.lng], {
+                radius: location.sales / 5,
+                color: 'orange',
+                fillOpacity: 0.7
+            }).addTo(map)
+                .bindTooltip(`${location.region}: ${location.sales} Verkäufe`, { permanent: true, direction: 'top' });
+        });
+
+        // Aktualisierung der Tabelle
+        const tableBody = document.querySelector('#salesTable tbody');
+        tableBody.innerHTML = '';
+        filteredData.forEach(data => {
+            const row = `<tr>
+                <td>${data.region}</td>
+                <td>${data.category}</td>
+                <td>${data.sales}</td>
+            </tr>`;
+            tableBody.innerHTML += row;
+        });
+
+        generateCharts(filteredData);
+    }
+
+    function generateCharts(data) {
+        const salesByYear = d3.rollups(data, v => d3.sum(v, d => d.sales), d => d.year);
+        salesByYear.sort((a, b) => a[0] - b[0]);
+
+        if (salesByYear.length === 0) return;
+
+        const years = salesByYear.map(d => d[0]);
+        const sales = salesByYear.map(d => d[1]);
+
+        // Lineare Regression
+        const regression = ss.linearRegression(years.map((year, i) => [year, sales[i]]));
+        const futureYears = d3.range(d3.max(years) + 1, d3.max(years) + forecastYears + 1);
+        const predictedSales = futureYears.map(year => regression.m * year + regression.b);
+
+        const allYears = [...years, ...futureYears];
+        const allSales = [...sales, ...predictedSales];
+
+        // Linie-Diagramm
+        const predictionCtx = document.getElementById('predictionChart').getContext('2d');
+        if (predictionChart) predictionChart.destroy();
+        predictionChart = new Chart(predictionCtx, {
+            type: 'line',
+            data: {
+                labels: allYears,
+                datasets: [
+                    {
+                        label: 'Tatsächliche Verkäufe',
+                        data: sales,
+                        borderColor: '#E0A800',
+                        fill: false,
+                        pointRadius: 5
+                    },
+                    {
+                        label: 'Prognostizierte Verkäufe',
+                        data: allSales,
+                        borderColor: '#FF6347',
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 5
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Jahr'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Verkäufe'
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1000
+                }
+            }
+        });
+
+        // Bar-Diagramm
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        if (salesChart) salesChart.destroy();
+        salesChart = new Chart(salesCtx, {
+            type: 'bar',
+            data: {
+                labels: years,
+                datasets: [{
+                    label: 'Verkäufe',
+                    data: sales,
+                    backgroundColor: 'rgba(224, 168, 0, 0.6)',
+                    borderColor: '#E0A800',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Jahr'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Verkäufe'
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1000
+                }
+            }
+        });
+
+        // Benachrichtigung
+        const alert = document.getElementById('alert');
+        const alertMessage = document.getElementById('alertMessage');
+        const lastSales = sales[sales.length - 1];
+        const firstPredictedSales = predictedSales[0];
+        const change = ((firstPredictedSales - lastSales) / lastSales) * 100;
+
+        if (Math.abs(change) > 20) {
+            alert.style.display = 'block';
+            alert.className = `alert ${change > 0 ? 'success' : 'warning'}`;
+            alertMessage.textContent = `Vorhersage: ${change > 0 ? 'Anstieg' : 'Rückgang'} von ${Math.abs(change).toFixed(2)}%`;
+        } else {
+            alert.style.display = 'none';
+        }
+    }
+
+    function updateForecastYears(value) {
+        forecastYears = parseInt(value);
+        document.getElementById('forecastYearsValue').textContent = value;
+        updateMapAndCharts();
+    }
+
+    function updateSmoothingFactor(value) {
+        smoothingFactor = parseFloat(value);
+        document.getElementById('smoothingFactorValue').textContent = value;
+        updateMapAndCharts();
+    }
+
+    function downloadCSV() {
+        const selectedCategory = document.getElementById('categorySelector').value;
+        const filteredData = salesData.filter(d => d.category === selectedCategory);
+        const salesByYear = d3.rollups(filteredData, v => d3.sum(v, d => d.sales), d => d.year);
+        salesByYear.sort((a, b) => a[0] - b[0]);
+
+        const years = salesByYear.map(d => d[0]);
+        const sales = salesByYear.map(d => d[1]);
+
+        const regression = ss.linearRegression(years.map((year, i) => [year, sales[i]]));
+        const futureYears = d3.range(d3.max(years) + 1, d3.max(years) + forecastYears + 1);
+        const predictedSales = futureYears.map(year => regression.m * year + regression.b);
+
+        const csvContent = "data:text/csv;charset=utf-8," +
+            "Jahr,Verkäufe\n" +
+            years.map((year, i) => `${year},${sales[i]}`).join("\n") + "\n" +
+            futureYears.map((year, i) => `${year},${predictedSales[i]}`).join("\n");
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "prognose.csv");
+        document.body.appendChild(link);
+        link.click();
+    }
+
+    // Dark Mode Toggle
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+    }
+
+    // Initiale Anzeige
+    window.onload = () => {
+        updateMapAndCharts();
+    };
+</script>
+</body>
