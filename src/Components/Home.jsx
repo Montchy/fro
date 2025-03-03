@@ -1,16 +1,71 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, FlatList } from 'react-native';
 import { useNavigate } from 'react-router-dom';
 import arrow from "./AlwaysActive/images/arrow.png";
 import { personList,exponateList } from '../Application/Classes/testDataGenerator';
+import {fetchAllPersons} from "../Application/Services/personService";
+import {fetchAllExponate} from "../Application/Services/exponateService";
+import {fetchAllAuctions} from "../Application/Services/auktionenService";
 
 const persons = personList;
 const exponate = exponateList;
 //const auctions = auctionList; TODO
 
 const Home = ({ darkMode, setDarkMode, isEnglish, setEnglish }) => {
+    const [persons, setPersons] = useState([]);
+    const [auctions, setAuctions] = useState([]);
+    const [exponate, setExponate] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [hoveredIndex, setHoveredIndex] = useState(null);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const loadAuctions = async () => {
+            try {
+                const data = await fetchAllAuctions();
+                setAuctions(data);
+            } catch (err) {
+                setError(isEnglish ? "Error loading auctions." : "Fehler beim Laden der Auktionen.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadAuctions();
+        console.log(auctions);
+    }, []);
+    useEffect(() => {
+        const loadExponate = async () => {
+            try {
+                const allExponate = await fetchAllExponate();
+                console.log('Geladene Exponate:', allExponate);
+                setExponate(allExponate);
+            } catch (err) {
+                setError('Daten konnten nicht geladen werden.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadExponate();
+    }, []);
+
+    useEffect(() => {
+        const loadPersons = async () => {
+            try {
+                const allPersons = await fetchAllPersons();
+                setPersons(allPersons);
+            } catch (err) {
+                setError("Daten konnten nicht geladen werden.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadPersons();
+        console.log(persons);
+    }, []);
+
 
     const handleNavigation = (route) => {
         navigate(route);
@@ -39,6 +94,28 @@ const Home = ({ darkMode, setDarkMode, isEnglish, setEnglish }) => {
         </View>
     );
 
+    const renderAuction = ({ item, index }) => (
+        <View
+            style={{ width: 400, flexDirection: "row" }}
+            key={index}
+            onMouseEnter={() => handleHover(index)}
+            onMouseLeave={() => handleHover(null)}
+        >
+            <View style={stylesTexts.simpleListItem}>
+                <View style={{ flexDirection: "row", width: 400 }}>
+                    <Text style={[darkMode ? { fontWeight:"bold",fontSize: 12 , color:"black"} : { fontWeight:"bold",fontSize: 12 , color:"rgba(33,33,33,1)"}]}>
+                        {item.id}
+                    </Text>
+                    <Text>                </Text>
+                    <Text style={[darkMode ? { fontWeight:"bold",fontSize: 12 , color:"white"} : { fontWeight:"bold",fontSize: 12 , color:"rgba(33,33,33,1)"}]}>
+                        {item.title}
+                    </Text>
+                    <Text> </Text>
+                </View>
+            </View>
+        </View>
+    );
+
     const renderExpon = ({ item, index }) => (
         <View
             style={{ width: 400, flexDirection: "row" }}
@@ -51,11 +128,11 @@ const Home = ({ darkMode, setDarkMode, isEnglish, setEnglish }) => {
                     <Text style={[{width:100},darkMode ? { fontWeight:"bold",fontSize: 12 , color:"white"} : { fontWeight:"bold",fontSize: 12 , color:"rgba(33,33,33,1)"}]}>
                         {item.exponatId}
                     </Text>
-                    <Text style={[{fontSize: 12,width:180},darkMode ? {color:"white"}:{color:"black"}]}>{item.titel}</Text>
-                    <Text style={[{fontSize: 12,width:100},darkMode ? {color:"white"}:{color:"black"}]}>{item.kategorie}</Text>
-                    <Text style={[{fontSize: 12,width:100},darkMode ? {color:"white"}:{color:"black"}]}>{item.masse}</Text>
-                    <Text style={[{fontSize: 12,width:100},darkMode ? {color:"white"}:{color:"black"}]}>{item.gewicht}</Text>
-                    <Text style={[{fontSize: 12,width:300},darkMode ? {color:"white"}:{color:"black"}]}>{item.kommentar}</Text>
+                    <Text style={[{fontSize: 12,width:180}, darkMode ? {color:"white"}:{color:"black"}]}>{item?.titel}</Text>
+                    <Text style={[{fontSize: 12,width:100}, darkMode ? {color:"white"}:{color:"black"}]}>{item?.kategorie?.name}</Text>
+                    <Text style={[{fontSize: 12,width:100}, darkMode ? {color:"white"}:{color:"black"}]}>{item?.masse}</Text>
+                    <Text style={[{fontSize: 12,width:100}, darkMode ? {color:"white"}:{color:"black"}]}>{item?.gewicht}</Text>
+                    <Text style={[{fontSize: 12,width:300}, darkMode ? {color:"white"}:{color:"black"}]}>{item?.kommentar}</Text>
                 </View>
             </View>
         </View>
@@ -140,11 +217,14 @@ const Home = ({ darkMode, setDarkMode, isEnglish, setEnglish }) => {
                     </View>
                 </View>
                 <View style={{ marginLeft:20, marginRight:20, marginTop: 3 }}>
+                    <View style={{flexDirection:"row"}}>
+                    <Text style={[stylesTexts.listValueName, { width: 67 }, darkMode ? stylesTexts.listValueNameD : stylesTexts.listValueNameL]}>ID</Text>
                     <Text style={[stylesTexts.listValueName, { width: 100 }, darkMode ? stylesTexts.listValueNameD : stylesTexts.listValueNameL]}>Name</Text>
+                    </View>
                     <View style={{height: 230,marginTop:3 }}>
                         <FlatList
-                            data={persons}
-                            renderItem={renderPerson}  // Render jede Person
+                            data={auctions}
+                            renderItem={renderAuction}  // Render jede Person
                             keyExtractor={(item, index) => index.toString()}
                             initialNumToRender={10}   // Zeige die ersten 10 Elemente an
                             maxToRenderPerBatch={10}  // Maximal 10 Elemente gleichzeitig rendern
