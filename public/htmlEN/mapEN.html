@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #map {
+            width: 100%;
+            height: 50vh;
+            margin-bottom: 20px;
+        }
+
+        #controls, #sort-controls {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f0f0f0;
+        }
+
+        h1, h2 {
+            margin-bottom: 20px;
+        }
+
+        .highlight {
+            background-color: lightgrey !important;
+        }
+
+        select, button, input {
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        button {
+            background-color: #FEC63D;
+            color: white;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        #legend div {
+            display: flex;
+            align-items: center;
+        }
+
+        #legend div div {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+        }
+
+        @media (max-width: 768px) {
+            #map {
+                height: 40vh;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            select, button, input {
+                font-size: 14px;
+                padding: 8px 10px;
+            }
+        }
+
+        #controls {
+            display: flex;
+            align-items: center; /* Elemente vertikal ausrichten */
+            justify-content: space-between; /* Elemente links und rechts ausrichten */
+            flex-wrap: wrap; /* Elemente umbrechen, falls der Platz knapp wird */
+            margin-bottom: 20px;
+        }
+
+        #controls select, #controls button, #controls input, #controls label {
+            margin-right: 10px;
+            margin-bottom: 5px; /* Abstand für mobile Ansicht */
+        }
+
+        #export-options {
+            margin-left: auto; /* Schiebt den Dropdown nach rechts */
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: white;
+            font-size: 14px;
+        }
+
+        #export-options:hover {
+            background-color: #f0f0f0;
+        }
+
+        @media (max-width: 768px) {
+            #controls {
+                flex-direction: column; /* Untereinander für kleinere Bildschirme */
+            }
+            #export-options {
+                margin-left: 0; /* Rücksetzen der rechten Ausrichtung für mobile Geräte */
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 40%;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+        }
+
+        #total-revenue {
+            font-size: 1.2em;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            color: #FEC63D;
+        }
+
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --table-header-bg: #f0f0f0;
+            --highlight-color: lightgrey;
+            --button-bg: #FEC63D;
+            --button-hover-bg: #0056b3;
+        }
+
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        table, th, td {
+            border-color: var(--table-header-bg);
+        }
+
+        th {
+            background-color: var(--table-header-bg);
+        }
+
+        button {
+            background-color: var(--button-bg);
+            color: white;
+        }
+
+        button:hover {
+            background-color: var(--button-hover-bg);
+        }
+
+        #legend div i {
+            margin-right: 5px;
+        }
+
+        .comment-button {
+            background-color: #FEC63D;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .comment-button:hover {
+            background-color: #0056b3;
+        }
+
+        .comment-text {
+            font-size: 14px;
+            color: #555;
+            white-space: pre-wrap;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 20px;
+            width: 40%;
+            border-radius: 10px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+        table th:nth-child(4), table td:nth-child(4) {
+            text-align: left;
+            width: 30%;
+        }
+
+        table th:nth-child(5), table td:nth-child(5) {
+            text-align: center;
+            width: 20%;
+        }
+
+        .comment-button {
+            background-color: #FEC63D;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .comment-button:hover {
+            background-color: #0056b3;
+        }
+        #back-button:hover {
+            background: #0056b3;
+        }
+        #back-button {
+            padding: 10px 15px;
+            background: #FEC63D;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        h1{
+            color: #FEC63D;
+        }
+
+        th{
+            background: #FEC63D;
+            color: white;
+        }
+
+        select, input {
+            border: 1px solid #FFD783;
+        }
+        #theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #FFFFFF;
+            color: #333;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 16px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #theme-toggle:hover {
+            background-color: #E0A800;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+<h1>Map View</h1>
+<button id="theme-toggle">🌙</button>
+<div id="controls">
+    <button onclick="resetToDefault()">Reset</button>
+    <label for="search">Search:</label>
+    <input type="text" id="search" placeholder="City or Category" onkeyup="handleSearch()">
+    <label for="start-year">Period from:</label>
+    <input type="number" id="start-year" min="2020" max="2025" value="2020" onchange="updateFilters()">
+    <label for="end-year">to:</label>
+    <input type="number" id="end-year" min="2020" max="2025" value="2025" onchange="updateFilters()">
+    <select id="export-options">
+        <option value="">Export...</option>
+        <option value="print">Print Charts</option>
+        <option value="csv">Export Data as CSV</option>
+        <option value="pdf">Export Data as PDF</option>
+        <option value="image">Export Map as Image</option>
+    </select>
+    <button onclick="openAddDataModal()">Add New Data</button>
+    <button id="compare-button" onclick="openCompareMode()">Compare</button>
+    <button id="back-button" onclick="goBack()">End Map View</button>
+</div>
+
+<div id="add-data-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAddDataModal()">&times;</span>
+        <h3>Add Data</h3>
+        <input type="text" id="new-city" placeholder="City" required>
+        <input type="text" id="new-category" placeholder="Category" required>
+        <input type="number" id="new-revenue" placeholder="Revenue" required>
+        <button onclick="addData()">Add</button>
+    </div>
+</div>
+
+<div id="total-revenue">
+    <strong>Total Revenue:</strong> <span id="total-revenue-value">0€</span>
+</div>
+
+<div id="map"></div>
+<div id="legend">
+    <div><div style="background-color: #4CAF50;"></div>Art</div>
+    <div><div style="background-color: #FF9800;"></div>Jewelry</div>
+    <div><div style="background-color: #2196F3;"></div>Antiques</div>
+    <div><div style="background-color: #9C27B0;"></div>Furniture</div>
+    <div><div style="background-color: #F44336;"></div>Rarities</div>
+    <div><div style="background-color: #00BCD4;"></div>Collectibles</div>
+</div>
+
+<h2>Data Overview</h2>
+<div id="sort-controls">
+    <label for="sort-options">Sorting:</label>
+    <select id="sort-options" onchange="handleSortChange()">
+        <option value="default">Choose Filter</option>
+        <option value="asc">Ascending</option>
+        <option value="desc">Descending</option>
+        <option value="top3">Top 3</option>
+        <option value="byCity">By City</option> <!-- New Option -->
+    </select>
+</div>
+<table id="data-table">
+    <thead>
+    <tr>
+        <th>City</th>
+        <th>Category</th>
+        <th>Revenue</th>
+        <th>Comments</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<div id="comment-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeCommentModal()">&times;</span>
+        <h3>Add Comment</h3>
+        <label for="comment-city">City:</label>
+        <input type="text" id="comment-city" disabled>
+        <label for="comment-category">Category:</label>
+        <input type="text" id="comment-category" disabled>
+        <label for="comment-text">Comment:</label>
+        <textarea id="comment-text" rows="4" placeholder="Your comment..."></textarea>
+        <button onclick="saveComment()">Save</button>
+    </div>
+</div>
+
+<script>
+    const cityData = [
+        { city: "Vienna", category: "Art", revenue: 2500000, year: 2023, coords: [48.2082, 16.3738], comments: "" },
+        { city: "Vienna", category: "Jewelry", revenue: 4000000, year: 2024, coords: [48.2082, 16.3738], comments: "" },
+        { city: "Vienna", category: "Antiques", revenue: 1500000, year: 2022, coords: [48.2082, 16.3738], comments: "" },
+        { city: "Vienna", category: "Rarities", revenue: 2000000, year: 2021, coords: [48.2082, 16.3738], comments: "Marketing !!!" },
+        { city: "Vienna", category: "Collectibles", revenue: 3000000, year: 2020, coords: [48.2082, 16.3738], comments: "" },
+        { city: "Graz", category: "Furniture", revenue: 1200000, year: 2025, coords: [47.0707, 15.4395], comments: "Revenue urgently needs to increase!!" },
+        { city: "Graz", category: "Art", revenue: 900000, year: 2024, coords: [47.0707, 15.4395], comments: "terrible" },
+        { city: "Graz", category: "Antiques", revenue: 1800000, year: 2022, coords: [47.0707, 15.4395], comments: "" },
+        { city: "Graz", category: "Jewelry", revenue: 1000000, year: 2021, coords: [47.0707, 15.4395], comments: "appalling" },
+        { city: "Graz", category: "Rarities", revenue: 800000, year: 2023, coords: [47.0707, 15.4395], comments: "" },
+        { city: "Innsbruck", category: "Collectibles", revenue: 1700000, year: 2021, coords: [47.2672, 11.3928], comments: "!!!" },
+        { city: "Innsbruck", category: "Rarities", revenue: 1300000, year: 2023, coords: [47.2672, 11.3928], comments: "" },
+        { city: "Innsbruck", category: "Furniture", revenue: 1100000, year: 2020, coords: [47.2672, 11.3928], comments: "Attention, decreased!" },
+        { city: "Innsbruck", category: "Jewelry", revenue: 1400000, year: 2024, coords: [47.2672, 11.3928], comments: "" },
+        { city: "Innsbruck", category: "Antiques", revenue: 900000, year: 2025, coords: [47.2672, 11.3928], comments: "" },
+        { city: "Salzburg", category: "Art", revenue: 1800000, year: 2020, coords: [47.8, 13.0333], comments: "" },
+        { city: "Salzburg", category: "Antiques", revenue: 1500000, year: 2024, coords: [47.8, 13.0333], comments: "" },
+        { city: "Salzburg", category: "Rarities", revenue: 2000000, year: 2025, coords: [47.8, 13.0333], comments: "" },
+        { city: "Salzburg", category: "Jewelry", revenue: 1700000, year: 2023, coords: [47.8, 13.0333], comments: "" },
+        { city: "Salzburg", category: "Collectibles", revenue: 1000000, year: 2022, coords: [47.8, 13.0333], comments: "" },
+        { city: "Linz", category: "Jewelry", revenue: 3000000, year: 2023, coords: [48.3069, 14.2858], comments: "increased by 30%" },
+        { city: "Linz", category: "Rarities", revenue: 1800000, year: 2021, coords: [48.3069, 14.2858], comments: "" },
+        { city: "Linz", category: "Collectibles", revenue: 1400000, year: 2022, coords: [48.3069, 14.2858], comments: "" },
+        { city: "Linz", category: "Art", revenue: 2200000, year: 2020, coords: [48.3069, 14.2858], comments: "" },
+        { city: "Linz", category: "Antiques", revenue: 1100000, year: 2024, coords: [48.3069, 14.2858], comments: "" },
+        { city: "Klagenfurt", category: "Furniture", revenue: 900000, year: 2022, coords: [46.6249, 14.3053], comments: "successful" },
+        { city: "Klagenfurt", category: "Rarities", revenue: 1200000, year: 2023, coords: [46.6249, 14.3053], comments: "" },
+        { city: "Klagenfurt", category: "Jewelry", revenue: 1000000, year: 2025, coords: [46.6249, 14.3053], comments: "" },
+        { city: "Klagenfurt", category: "Art", revenue: 900000, year: 2020, coords: [46.6249, 14.3053], comments: "" },
+        { city: "Villach", category: "Art", revenue: 1500000, year: 2023, coords: [46.6167, 13.85], comments: "" },
+        { city: "Villach", category: "Antiques", revenue: 900000, year: 2022, coords: [46.6167, 13.85], comments: "" },
+        { city: "Villach", category: "Collectibles", revenue: 700000, year: 2024, coords: [46.6167, 13.85], comments: "" },
+        { city: "Villach", category: "Rarities", revenue: 1200000, year: 2021, coords: [46.6167, 13.85], comments: "" },
+        { city: "St. Pölten", category: "Rarities", revenue: 800000, year: 2021, coords: [48.2047, 15.6256], comments: "" },
+        { city: "St. Pölten", category: "Furniture", revenue: 1100000, year: 2023, coords: [48.2047, 15.6256], comments: "" },
+        { city: "St. Pölten", category: "Art", revenue: 950000, year: 2025, coords: [48.2047, 15.6256], comments: "" },
+        { city: "Eisenstadt", category: "Jewelry", revenue: 500000, year: 2025, coords: [47.8457, 16.5274], comments: "" },
+        { city: "Eisenstadt", category: "Antiques", revenue: 600000, year: 2024, coords: [47.8457, 16.5274], comments: "" },
+        { city: "Eisenstadt", category: "Collectibles", revenue: 800000, year: 2022, coords: [47.8457, 16.5274], comments: "" },
+        { city: "Eisenstadt", category: "Rarities", revenue: 450000, year: 2020, coords: [47.8457, 16.5274], comments: "" },
+        { city: "Bregenz", category: "Furniture", revenue: 900000, year: 2023, coords: [47.5031, 9.7471], comments: "" },
+        { city: "Bregenz", category: "Jewelry", revenue: 1500000, year: 2024, coords: [47.5031, 9.7471], comments: "" },
+        { city: "Bregenz", category: "Art", revenue: 1200000, year: 2025, coords: [47.5031, 9.7471], comments: "" },
+        { city: "Bregenz", category: "Collectibles", revenue: 500000, year: 2021, coords: [47.5031, 9.7471], comments: "" },
+        { city: "Dornbirn", category: "Rarities", revenue: 800000, year: 2023, coords: [47.4125, 9.7417], comments: "" },
+        { city: "Dornbirn", category: "Furniture", revenue: 950000, year: 2022, coords: [47.4125, 9.7417], comments: "" },
+        { city: "Dornbirn", category: "Antiques", revenue: 650000, year: 2025, coords: [47.4125, 9.7417], comments: "" }
+    ];
+
+    const map = L.map('map').setView([47.5, 14.5], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    const markers = [];
+    let filteredData = [...cityData];
+    let originalOrder = [...cityData];
+
+    function openCompareMode() {
+        const compareButton = document.getElementById("compare-button");
+        compareButton.style.display = "none";
+        window.location.href = "compareMap.html";
+        console.log("Attempting to navigate to the comparison page...");
+    }
+
+    function hideElementsForCompareMode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('compare') === 'true') {
+            document.getElementById("compare-button").style.display = "none"; // Versteckt den "Vergleichen"-Button
+            document.getElementById("export-options").style.display = "none";
+            document.getElementById("back-button").style.display = "none";
+            document.getElementById("theme-toggle").style.display = "none";
+        }
+    }
+
+    function goBack() {
+        window.location.href = "statistics.html";
+    }
+
+    function calculateRadius(revenue) {
+        return Math.sqrt(revenue) / 200;
+    }
+
+    function updateTotalRevenue() {
+        const totalRevenue = filteredData.reduce((sum, item) => sum + item.revenue, 0);
+        document.getElementById("total-revenue-value").textContent = `${totalRevenue.toLocaleString()}€`;
+    }
+
+    function getCategoryIcon(category) {
+        const icons = {
+            "Kunst": '<i class="fas fa-palette" style="color: #4CAF50;"></i>',
+            "Schmuck": '<i class="fas fa-gem" style="color: #FF9800;"></i>',
+            "Antiquitäten": '<i class="fas fa-landmark" style="color: #2196F3;"></i>',
+            "Möbel": '<i class="fas fa-couch" style="color: #9C27B0;"></i>',
+            "Raritäten": '<i class="fas fa-crown" style="color: #F44336;"></i>',
+            "Sammlerstücke": '<i class="fas fa-box" style="color: #00BCD4;"></i>'
+        };
+        return icons[category] || '';
+    }
+
+    function getColor(category) {
+        const colors = {
+            "Art": "#4CAF50",
+            "Jewelry": "#FF9800",
+            "Antiques": "#2196F3",
+            "Furniture": "#9C27B0",
+            "Rarities": "#F44336",
+            "Collectibles": "#00BCD4"
+        };
+
+        return colors[category] || "#007bff";
+    }
+
+    function updateMap() {
+        markers.forEach(marker => map.removeLayer(marker));
+        markers.length = 0;
+
+        const topPerformers = getTopPerformers(filteredData);
+
+        filteredData.forEach(item => {
+            const isTopPerformer = topPerformers[item.category]?.city === item.city;
+
+
+            const marker = L.circleMarker(item.coords, {
+                color: getColor(item.category),
+                fillColor: getColor(item.category),
+                fillOpacity: 0.7,
+                radius: calculateRadius(item.revenue)
+            }).addTo(map);
+
+            const icon = getCategoryIcon(item.category);
+            const badge = isTopPerformer
+                ? `<i class="fas fa-star" style="color: gold;"></i> ${getCategoryIcon(item.category)}`
+                : '';
+
+            marker.bindTooltip(
+                `<div>
+                    ${icon} <strong>${item.city}</strong> ${badge}<br>
+                    Umsatz: ${item.revenue.toLocaleString()}€ (${item.category})
+                </div>`,
+                { permanent: false, direction: 'top' }
+            );
+
+            markers.push(marker);
+        });
+
+        updateTable(filteredData);
+        updateTotalRevenue();
+    }
+
+    function updateTable(data) {
+        const topPerformers = getTopPerformers(data);
+        const tbody = document.getElementById("data-table").querySelector("tbody");
+        tbody.innerHTML = "";
+
+        data.forEach(item => {
+            const isTopPerformer = topPerformers[item.category]?.city === item.city;
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${item.city}</td>
+                <td>${getCategoryIcon(item.category)} ${item.category}</td>
+                  <td>
+                ${item.revenue.toLocaleString()}€
+                ${isTopPerformer
+                ? `<i class="fas fa-star" style="color: gold;"></i> ${getCategoryIcon(item.category)}`
+                : ''}
+            </td>
+         <td class="comment-text">${item.comments || ""}</td> <!-- Kommentare -->
+            <td>
+                <button class="comment-button" onclick="openCommentModal('${item.city}', '${item.category}')">
+                   Edit Comment
+                </button>
+            </td> <!-- Button in der Aktionen-Spalte -->
+            `;
+            tbody.appendChild(row);
+        });
+    }
+    function openCommentModal(city, category) {
+        document.getElementById("comment-city").value = city;
+        document.getElementById("comment-category").value = category;
+        document.getElementById("comment-text").value = cityData.find(
+            item => item.city === city && item.category === category
+        ).comments || "";
+        document.getElementById("comment-modal").style.display = "block";
+    }
+
+    function closeCommentModal() {
+        document.getElementById("comment-modal").style.display = "none";
+    }
+
+    function saveComment() {
+        const city = document.getElementById("comment-city").value;
+        const category = document.getElementById("comment-category").value;
+        const comment = document.getElementById("comment-text").value;
+
+        const item = cityData.find(item => item.city === city && item.category === category);
+        if (item) {
+            item.comments = comment;
+            updateTable(filteredData); // Tabelle aktualisieren
+            closeCommentModal();
+        }
+    }
+
+    function handleSortChange() {
+        const sortOption = document.getElementById("sort-options").value;
+        const tbody = document.getElementById("data-table").querySelector("tbody");
+        const categoryHeader = document.querySelector("#data-table thead tr th:nth-child(2)"); // Spaltentitel für Kategorien
+        let rows = Array.from(tbody.querySelectorAll("tr"));
+
+        rows.forEach(row => row.classList.remove("highlight"));
+
+        if (sortOption === "asc" || sortOption === "desc") {
+            rows.sort((a, b) => {
+                const aRevenue = parseInt(a.children[2].textContent.replace(/[^0-9]/g, ""));
+                const bRevenue = parseInt(b.children[2].textContent.replace(/[^0-9]/g, ""));
+                return sortOption === "asc" ? aRevenue - bRevenue : bRevenue - aRevenue;
+            });
+        } else if (sortOption === "top3") {
+            rows.sort((a, b) => {
+                const aRevenue = parseInt(a.children[2].textContent.replace(/[^0-9]/g, ""));
+                const bRevenue = parseInt(b.children[2].textContent.replace(/[^0-9]/g, ""));
+                return bRevenue - aRevenue;
+            });
+            rows.slice(0, 3).forEach(row => row.classList.add("highlight"));
+        }  else if (sortOption === "byCity") {
+            // Spaltentitel ändern
+            categoryHeader.textContent = "Kategorien";
+
+            // Gruppiere die Daten nach Stadt und berechne den Gesamtumsatz
+            const citySummary = calculateCitySummary(filteredData);
+
+            // Tabelle aktualisieren
+            tbody.innerHTML = ""; // Tabelle zurücksetzen
+            document.querySelectorAll("th:nth-child(4), th:nth-child(5)").forEach(th => {
+                th.style.display = "none";
+            });
+            document.querySelectorAll("td:nth-child(4), td:nth-child(5)").forEach(td => {
+                td.style.display = "none";
+            });
+
+            citySummary.forEach(({ city, categories, totalRevenue }) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                <td>${city}</td>
+                <td>${categories.map(cat => getCategoryIcon(cat)).join(" ")}</td>
+                <td>${totalRevenue.toLocaleString()}€</td>
+            `;
+                tbody.appendChild(row);
+            });
+            updateMapByCity(citySummary);
+        } else if (sortOption === "default") {
+            // Spaltentitel zurücksetzen
+            categoryHeader.textContent = "Kategorie";
+            document.querySelectorAll("th:nth-child(4), th:nth-child(5)").forEach(th => {
+                th.style.display = "";
+            });
+            document.querySelectorAll("td:nth-child(4), td:nth-child(5)").forEach(td => {
+                td.style.display = "";
+            });
+            filteredData = [...originalOrder];
+            updateTable(filteredData);
+            updateMap(); // Reset Karte
+        }
+
+        if (sortOption !== "byCity") {
+            tbody.innerHTML = "";
+            rows.forEach(row => tbody.appendChild(row));
+        }
+    }
+    function updateMapByCity(citySummary) {
+        markers.forEach(marker => map.removeLayer(marker)); // Entferne alte Marker
+        markers.length = 0;
+
+        citySummary.forEach(({ city, totalRevenue }) => {
+            const coords = cityData.find(d => d.city === city)?.coords || [47, 15];
+
+            const marker = L.circleMarker(coords, {
+                color: "blue",
+                fillColor: "lightblue",
+                fillOpacity: 0.7,
+                radius: calculateRadius(totalRevenue)
+            }).addTo(map);
+
+            marker.bindTooltip(
+                `<div>
+                <strong>${city}</strong><br>
+                Gesamtumsatz: ${totalRevenue.toLocaleString()}€
+            </div>`,
+                { permanent: false, direction: 'top' }
+            );
+
+            markers.push(marker);
+        });
+    }
+
+    function getTopPerformers(filteredData) {
+        const topPerformers = {};
+        filteredData.forEach(item => {
+            if (
+                !topPerformers[item.category] ||
+                topPerformers[item.category].revenue < item.revenue
+            ) {
+                topPerformers[item.category] = item;
+            }
+        });
+        return topPerformers;
+    }
+
+
+    function calculateCitySummary(data) {
+        const cityMap = {};
+
+        data.forEach(item => {
+            if (!cityMap[item.city]) {
+                cityMap[item.city] = { categories: new Set(), totalRevenue: 0 };
+            }
+            cityMap[item.city].categories.add(item.category);
+            cityMap[item.city].totalRevenue += item.revenue;
+        });
+
+        return Object.entries(cityMap).map(([city, { categories, totalRevenue }]) => ({
+            city,
+            categories: Array.from(categories), // Set zu Array konvertieren
+            totalRevenue
+        }));
+    }
+
+
+    function handleSearch() {
+        const searchQuery = document.getElementById("search").value.toLowerCase();
+        const startYear = parseInt(document.getElementById("start-year").value);
+        const endYear = parseInt(document.getElementById("end-year").value);
+
+        filteredData = cityData.filter(item =>
+            (item.city.toLowerCase().includes(searchQuery) || item.category.toLowerCase().includes(searchQuery)) &&
+            item.year >= startYear && item.year <= endYear
+        );
+        updateMap();
+        updateTotalRevenue();
+    }
+
+
+    function updateFilters() {
+        handleSearch();
+    }
+
+    document.getElementById("export-options").addEventListener("change", (event) => {
+        const value = event.target.value;
+        if (value === "print") printPage();
+        else if (value === "csv") exportCSV();
+        else if (value === "pdf") exportPDF();
+        else if (value === "image") exportMapAsImage();
+        event.target.value = "";
+    });
+
+    function printPage() {
+        window.print();
+    }
+    function exportCSV() {
+        const csvHeader = "Stadt,Kategorie,Umsatz\n";
+        const csvRows = filteredData.map(d =>
+            `${d.city},${d.category},${d.revenue}`
+        ).join("\n");
+
+        const csvContent = "data:text/csv;charset=utf-8," + csvHeader + csvRows;
+        const encodedUri = encodeURI(csvContent);
+
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "auktionsdaten.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function exportPDF() {
+        const { jsPDF } = window.jspdf;
+
+        // Wähle den gesamten sichtbaren Bereich aus
+        const element = document.body;
+
+        html2canvas(element, { scale: 2 }).then(canvas => {
+            const imgData = canvas.toDataURL("image/png");
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save('statistics.pdf'); // PDF herunterladen
+        });
+    }
+
+    function exportMapAsImage() {
+        html2canvas(document.getElementById('map')).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'map.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    }
+
+    function openAddDataModal() {
+        document.getElementById("add-data-modal").style.display = "block";
+    }
+
+    function closeAddDataModal() {
+        document.getElementById("add-data-modal").style.display = "none";
+    }
+
+    function addData() {
+        const city = document.getElementById('new-city').value;
+        const category = document.getElementById('new-category').value;
+        const revenue = parseInt(document.getElementById('new-revenue').value);
+
+        if (!city || !category || isNaN(revenue)) {
+            alert("Bitte alle Felder korrekt ausfüllen!");
+            return;
+        }
+
+        const coords = [Math.random() * 2 + 47, Math.random() * 2 + 15]; // Dummy-Koordinaten
+        cityData.push({ city, category, revenue, coords, year: new Date().getFullYear() });
+
+        resetToDefault();
+        closeAddDataModal();
+        alert("Daten erfolgreich hinzugefügt!");
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById("add-data-modal");
+        if (event.target === modal) {
+            modal.style.display = "none";
+        }
+    }
+
+
+    function resetToDefault() {
+        document.getElementById("search").value = "";
+        document.getElementById("start-year").value = 2020;
+        document.getElementById("end-year").value = 2025;
+        document.getElementById("sort-options").value = "default";
+        document.querySelectorAll("th:nth-child(4), th:nth-child(5)").forEach(th => {
+            th.style.display = "";
+        });
+        document.querySelectorAll("td:nth-child(4), td:nth-child(5)").forEach(td => {
+            td.style.display = "";
+        });
+        filteredData = [...cityData];
+        updateTotalRevenue();
+        updateMap();
+    }
+
+    const themeToggle = document.getElementById("theme-toggle");
+    let darkMode = false;
+
+    function toggleTheme() {
+        if (!darkMode) {
+            document.body.style.backgroundColor = "#121212";
+            document.body.style.color = "#ffffff";
+            document.querySelector("h1").style.color = "#0844A4";
+            document.querySelectorAll("h2").forEach(h2 => h2.style.color = "#0844A4");
+            document.querySelectorAll("th").forEach(th => th.style.backgroundColor = "#0844A4");
+            document.querySelectorAll("td").forEach(td => td.style.backgroundColor = "#222");
+            document.querySelectorAll(".comment-text").forEach(comment => {
+                comment.style.color = "#ffffff";
+            });
+            document.querySelectorAll("button").forEach(button => {
+                button.style.backgroundColor = "#0844A4";
+                button.style.color = "#ffffff";
+            });
+            document.getElementById("total-revenue-value").style.color = "#0844A4";
+            document.querySelectorAll("select, input").forEach(input => {
+                input.style.backgroundColor = "#222";
+                input.style.color = "#ffffff";
+                input.style.border = "1px solid #0844A4";
+            });
+            document.querySelector("#total-revenue strong").style.color = "#0844A4";
+            document.getElementById("map").style.border = "2px solid #FFD783";
+            themeToggle.style.backgroundColor = "#0844A4";
+            themeToggle.style.color = "#FFFFFF";
+            themeToggle.onmouseover = () => themeToggle.style.backgroundColor = "#0844A4";
+            themeToggle.onmouseout = () => themeToggle.style.backgroundColor = "#0C59CF";
+            themeToggle.textContent = "☀️";
+            darkMode = true;
+        } else {
+            document.body.style.backgroundColor = "";
+            document.body.style.color = "";
+            document.querySelector("h1").style.color = "";
+            document.querySelectorAll("h2").forEach(h2 => h2.style.color = "");
+            document.querySelectorAll("th").forEach(th => th.style.backgroundColor = "");
+            document.querySelectorAll("td").forEach(td => td.style.backgroundColor = "");
+            document.querySelectorAll(".comment-text").forEach(comment => {
+                comment.style.color = "";
+            });
+            document.querySelectorAll("button").forEach(button => {
+                button.style.backgroundColor = "";
+                button.style.color = "";
+            });
+            document.getElementById("total-revenue-value").style.color = "";
+
+            document.querySelectorAll("select, input").forEach(input => {
+                input.style.backgroundColor = "";
+                input.style.color = "";
+                input.style.border = "";
+            });
+            document.querySelector("#total-revenue strong").style.color = "";
+            document.getElementById("map").style.border = "";
+            themeToggle.style.backgroundColor = "#FFFFFF";
+            themeToggle.style.color = "#333";
+            themeToggle.onmouseover = () => themeToggle.style.backgroundColor = "#E0A800";
+            themeToggle.onmouseout = () => themeToggle.style.backgroundColor = "#FFFFFF";
+            themeToggle.textContent = "🌙";
+            darkMode = false;
+        }
+    }
+
+    themeToggle.addEventListener("click", toggleTheme);
+
+
+    window.addEventListener("message", (event) => {
+        if (event.data.theme === "dark") {
+            document.body.style.backgroundColor = "#121212";
+            document.body.style.color = "#ffffff";
+            document.querySelectorAll("h1, h2").forEach(h => h.style.color = "#ffffff");
+            document.querySelectorAll("button, input, select").forEach(el => {
+                el.style.backgroundColor = "#222";
+                el.style.color = "#ffffff";
+                el.style.border = "1px solid #0844A4";
+            });
+            document.querySelectorAll("th, td").forEach(el => el.style.backgroundColor = "#222");
+        } else if (event.data.theme === "light") {
+            document.body.style.backgroundColor = "";
+            document.body.style.color = "";
+            document.querySelectorAll("h1, h2").forEach(h => h.style.color = "");
+            document.querySelectorAll("button, input, select").forEach(el => {
+                el.style.backgroundColor = "";
+                el.style.color = "";
+                el.style.border = "";
+            });
+            document.querySelectorAll("th, td").forEach(el => el.style.backgroundColor = "");
+        }
+    });
+
+    // Standardansicht
+    resetToDefault();
+    document.addEventListener("DOMContentLoaded", hideElementsForCompareMode);
+</script>
+</body>
+</html>

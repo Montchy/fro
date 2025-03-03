@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auktionshaus Dashboard</title>
+    <title>Auction House Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <style>
@@ -90,42 +90,42 @@
     </style>
 </head>
 <body>
-<h1 style="text-align: center; font-size: 2.5rem; color: #0844A4; margin-top: 20px;">Kinsky Leistungsdashboard</h1>
+<h1 style="text-align: center; font-size: 2.5rem; color: #0844A4; margin-top: 20px;">Kinsky Performance Dashboard</h1>
 <div id="particles-js"></div>
 <div class="grid">
-    <!-- Lagerbestandsoptimierung -->
+    <!-- Inventory Optimization -->
     <div class="card">
-        <h2>Lagerzeit Analyse</h2>
-        <p style="margin-bottom: 100px;">Durchschnittliche Lagerdauer (Tage) nach Kategorie.</p>
+        <h2>Inventory Duration Analysis</h2>
+        <p style="margin-bottom: 100px;">Average length of stay (days) by category.</p>
 
-        <label for="categorySelect" id="categoryLabel" style="display: none;">Kategorie wählen:</label>
+        <label for="categorySelect" id="categoryLabel" style="display: none;">Select Category:</label>
         <select id="categorySelect" style="display: none;" onchange="updateInventoryChart()">
-            <option value="all">Alle Kategorien</option>
-            <option value="paintings">Gemälde</option>
-            <option value="sculptures">Skulpturen</option>
-            <option value="furniture">Möbel</option>
-            <option value="ceramics">Keramik</option>
-            <option value="modern_art">Moderne Kunst</option>
-            <option value="jewelry">Schmuck</option>
-            <option value="watches">Uhren</option>
-            <option value="coins">Münzen</option>
-            <option value="books">Bücher</option>
-            <option value="wine">Wein</option>
+            <option value="all">All Categories</option>
+            <option value="paintings">Paintings</option>
+            <option value="sculptures">Sculptures</option>
+            <option value="furniture">Furniture</option>
+            <option value="ceramics">Ceramics</option>
+            <option value="modern_art">Modern Art</option>
+            <option value="jewelry">Jewelry</option>
+            <option value="watches">Watches</option>
+            <option value="coins">Coins</option>
+            <option value="books">Books</option>
+            <option value="wine">Wine</option>
         </select>
 
         <canvas id="inventoryChart"></canvas>
     </div>
 
     <div class="card">
-        <h2>Umsatzanalyse</h2>
+        <h2>Revenue Analysis</h2>
 
-        <p>Dieses Diagramm zeigt den monatlichen Umsatz des Auktionshauses im gewählten Jahr. Die Umsatzdaten sind aufgeschlüsselt nach Auktionen und Kategorien, um die finanzielle Leistung pro Bereich besser zu verstehen.</p>
+        <p>This chart shows the monthly revenue of the auction house for the selected year. The revenue data is broken down by auctions and categories to better understand the financial performance in each area.</p>
 
-        <p><strong>Gesamtumsatz im gewählten Jahr:</strong>
+        <p><strong>Total revenue for the selected year:</strong>
             <span id="totalRevenue" style="font-size: 1.2rem; color: #0C59CF;">€100,000</span>
         </p>
 
-        <label for="yearSelectRevenue"><strong>Jahr wählen:</strong></label>
+        <label for="yearSelectRevenue"><strong>Select Year:</strong></label>
         <select id="yearSelectRevenue" onchange="updateRevenueChart()">
             <option value="2024" selected>2024</option>
             <option value="2023">2023</option>
@@ -137,92 +137,93 @@
         <canvas id="revenueChart"></canvas>
     </div>
 
-    <div class="card">
-        <h2>Personal- & Raumbelegung (Kapazitätsauslastung)</h2>
+<div class="card">
+    <h2>Personnel & Room Occupancy (Capacity Utilization)</h2>
 
-        <!-- Klare Erklärung, was das Diagramm zeigt -->
-        <p>Dieses Diagramm zeigt die monatliche Nutzung von Personal und Räumen im Auktionshaus.
-            Die Zahlen geben an, wie viele Ressourcen (Schätzungsbüros, Auktionshalle, Logistik) im jeweiligen Monat aktiv genutzt wurden. (Anzahl der aktiv verwendeten Räume)</p>
+    <!-- Clear explanation of what the chart shows -->
+    <p>This chart shows the monthly usage of personnel and rooms in the auction house.
+        The numbers indicate how many resources (appraisal offices, auction hall, logistics) were actively used in each month. (Number of rooms actively used)</p>
 
+    <p><strong>Color legend:</strong></p>
+    <ul>
+        <li><span style="color:turquoise;"><strong>🔵 Turquoise (0 – 6):</strong></span> Low usage</li>
+        <li><span style="color:goldenrod;"><strong>🟡 Yellow (7 – 13):</strong></span> Medium usage</li>
+        <li><span style="color:red;"><strong>🔴 Red (14+):</strong></span> High usage (capacity limit reached)</li>
+    </ul>
 
-        <p><strong>Farblegende:</strong></p>
-        <ul>
-            <li><span style="color:turquoise;"><strong>🔵 Türkis (0 – 6):</strong></span> Wenig genutzt</li>
-            <li><span style="color:goldenrod;"><strong>🟡 Gelb (7 – 13):</strong></span> Mittel genutzt</li>
-            <li><span style="color:red;"><strong>🔴 Rot (14+):</strong></span> Hohe Nutzung (Kapazitätsgrenze erreicht)</li>
-        </ul>
+    <!-- Dropdown to select the year -->
+    <label for="yearSelectHeatmap"><strong>Select Year:</strong></label>
+    <select id="yearSelectHeatmap" onchange="updateResourceHeatmap()">
+        <option value="2024" selected>2024</option>
+        <option value="2023">2023</option>
+        <option value="2022">2022</option>
+        <option value="2021">2021</option>
+        <option value="2020">2020</option>
+    </select>
 
-        <!-- Dropdown zur Auswahl des Jahres -->
-        <label for="yearSelectHeatmap"><strong>Jahr wählen:</strong></label>
-        <select id="yearSelectHeatmap" onchange="updateResourceHeatmap()">
-            <option value="2024" selected>2024</option>
-            <option value="2023">2023</option>
-            <option value="2022">2022</option>
-            <option value="2021">2021</option>
-            <option value="2020">2020</option>
-        </select>
+    <canvas id="resourceHeatmap"></canvas>
+</div>
 
-        <canvas id="resourceHeatmap"></canvas>
-    </div>
+<div class="card">
+    <h2>Average Preparation Time</h2>
 
-    <div class="card">
-        <h2>Durchschnittliche Vorbereitungszeit</h2>
+    <p>This chart shows the average preparation time per category and year.
+        The preparation time includes appraisal, marketing, and logistics.</p>
 
-        <p>Dieses Diagramm zeigt die durchschnittliche Vorbereitungszeit pro Kategorie und Jahr.
-            Die Vorbereitungszeit umfasst Schätzung, Marketing und Logistik.</p>
+    <label for="yearSelectPreparation"><strong>Select Year:</strong></label>
+    <select id="yearSelectPreparation" onchange="updatePreparationChart()">
+        <option value="2024" selected>2024</option>
+        <option value="2023">2023</option>
+        <option value="2022">2022</option>
+        <option value="2021">2021</option>
+        <option value="2020">2020</option>
+    </select>
 
-        <label for="yearSelectPreparation"><strong>Jahr wählen:</strong></label>
-        <select id="yearSelectPreparation" onchange="updatePreparationChart()">
-            <option value="2024" selected>2024</option>
-            <option value="2023">2023</option>
-            <option value="2022">2022</option>
-            <option value="2021">2021</option>
-            <option value="2020">2020</option>
-        </select>
+    <canvas id="preparationTimeChart"></canvas>
+</div>
 
-        <canvas id="preparationTimeChart"></canvas>
-    </div>
-    <div class="card">
-        <h2>Anzahl der Auktionen</h2>
+<div class="card">
+    <h2>Number of Auctions</h2>
 
-        <p>Dieses Diagramm zeigt die Anzahl der Auktionen im gewählten Jahr.
-            Da Auktionen nicht jeden Monat stattfinden, kann es Monate ohne Einträge geben.</p>
+    <p>This chart shows the number of auctions in the selected year.
+        Since auctions do not take place every month, there may be months with no entries.</p>
 
-        <p><strong>Gesamtanzahl der Auktionen im gewählten Jahr:</strong>
-            <span id="auctionTotal" style="font-size: 1.2rem; color: #0C59CF;">22</span>
-        </p>
+    <p><strong>Total number of auctions in the selected year:</strong>
+        <span id="auctionTotal" style="font-size: 1.2rem; color: #0C59CF;">22</span>
+    </p>
 
-        <!-- Dropdown zur Auswahl des Jahres -->
-        <label for="yearSelectAuktionen"><strong>Jahr wählen:</strong></label>
-        <select id="yearSelectAuktionen" onchange="updateAuctionCount()">
-            <option value="2024" selected>2024</option>
-            <option value="2023">2023</option>
-            <option value="2022">2022</option>
-            <option value="2021">2021</option>
-            <option value="2020">2020</option>
-        </select>
+    <!-- Dropdown to select the year -->
+    <label for="yearSelectAuktionen"><strong>Select Year:</strong></label>
+    <select id="yearSelectAuktionen" onchange="updateAuctionCount()">
+        <option value="2024" selected>2024</option>
+        <option value="2023">2023</option>
+        <option value="2022">2022</option>
+        <option value="2021">2021</option>
+        <option value="2020">2020</option>
+    </select>
 
-        <canvas id="auctionCountChart"></canvas>
-    </div>
+    <canvas id="auctionCountChart"></canvas>
+</div>
 
-    <div class="card">
-        <h2>Durschnittliche Auktionsdauer⏳</h2>
-        <p>Gibt Einblick, wie lange eine Auktion im Schnitt dauert – wichtig für die Planung & Optimierung.</p>
+<div class="card">
+    <h2>Average Auction Duration⏳</h2>
+    <p>Gives insight into how long an auction typically lasts – important for planning and optimization.</p>
 
-        <p><strong>⏳ Kürzeste Auktion:</strong> <span id="shortestAuction" style="font-size: 1.2rem; color: #E91E63;">--</span> min</p>
-        <p><strong>⏳ Längste Auktion:</strong> <span id="longestAuction" style="font-size: 1.2rem; color: #0C59CF;">--</span> min</p>
+    <p><strong>⏳ Shortest Auction:</strong> <span id="shortestAuction" style="font-size: 1.2rem; color: #E91E63;">--</span> min</p>
+    <p><strong>⏳ Longest Auction:</strong> <span id="longestAuction" style="font-size: 1.2rem; color: #0C59CF;">--</span> min</p>
 
-        <label for="yearSelectDuration"><strong>Jahr wählen:</strong></label>
-        <select id="yearSelectDuration" onchange="updateAuctionDurationChart()">
-            <option value="2024" selected>2024</option>
-            <option value="2023">2023</option>
-            <option value="2022">2022</option>
-            <option value="2021">2021</option>
-            <option value="2020">2020</option>
-        </select>
+    <label for="yearSelectDuration"><strong>Select Year:</strong></label>
+    <select id="yearSelectDuration" onchange="updateAuctionDurationChart()">
+        <option value="2024" selected>2024</option>
+        <option value="2023">2023</option>
+        <option value="2022">2022</option>
+        <option value="2021">2021</option>
+        <option value="2020">2020</option>
+    </select>
 
-        <canvas id="auctionDurationChart"></canvas>
-    </div>
+    <canvas id="auctionDurationChart"></canvas>
+</div>
+
 </div>
 
 <script>
@@ -235,35 +236,41 @@
         navyBlue: "#0844A4",
     };
 
-    // Lagerbestandsoptimierung start
     const categories = {
-        "Gemälde": "#FF5733",
-        "Skulpturen": "#36A2EB",
-        "Möbel": "#4CAF50",
-        "Keramik": "#FFC107",
-        "Moderne Kunst": "#8E44AD",
-        "Schmuck": "#E91E63",
-        "Uhren": "#795548",
-        "Münzen": "#00BCD4",
-        "Bücher": "#9E9E9E"
+        "Paintings": "#FF5733",
+        "Sculptures": "#36A2EB",
+        "Furniture": "#4CAF50",
+        "Ceramics": "#FFC107",
+        "Modern Art": "#8E44AD",
+        "Jewelry": "#E91E63",
+        "Watches": "#795548",
+        "Coins": "#00BCD4",
+        "Books": "#9E9E9E"
     };
 
     const inventoryData = {
-        "2020": { "Gemälde": 200, "Skulpturen": 150, "Möbel": 180, "Keramik": 90, "Moderne Kunst": 160, "Schmuck": 110, "Uhren": 95, "Münzen": 140, "Bücher": 130 },
-        "2021": { "Gemälde": 180, "Skulpturen": 140, "Möbel": 170, "Keramik": 85, "Moderne Kunst": 150, "Schmuck": 100, "Uhren": 90, "Münzen": 130, "Bücher": 120 },
-        "2022": { "Gemälde": 160, "Skulpturen": 130, "Möbel": 160, "Keramik": 80, "Moderne Kunst": 140, "Schmuck": 95, "Uhren": 85, "Münzen": 120, "Bücher": 110 },
-        "2023": { "Gemälde": 150, "Skulpturen": 120, "Möbel": 140, "Keramik": 75, "Moderne Kunst": 130, "Schmuck": 90, "Uhren": 80, "Münzen": 110, "Bücher": 100 }
+        "2020": { "Paintings": 200, "Sculptures": 150, "Furniture": 180, "Ceramics": 90, "Modern Art": 160, "Jewelry": 110, "Watches": 95, "Coins": 140, "Books": 130 },
+        "2021": { "Paintings": 180, "Sculptures": 140, "Furniture": 170, "Ceramics": 85, "Modern Art": 150, "Jewelry": 100, "Watches": 90, "Coins": 130, "Books": 120 },
+        "2022": { "Paintings": 160, "Sculptures": 130, "Furniture": 160, "Ceramics": 80, "Modern Art": 140, "Jewelry": 95, "Watches": 85, "Coins": 120, "Books": 110 },
+        "2023": { "Paintings": 150, "Sculptures": 120, "Furniture": 140, "Ceramics": 75, "Modern Art": 130, "Jewelry": 90, "Watches": 80, "Coins": 110, "Books": 100 }
     };
 
     let inventoryChartCtx = document.getElementById('inventoryChart').getContext('2d');
+
+    // Initialize the chart with default data (for all categories)
     let inventoryChart = new Chart(inventoryChartCtx, {
         type: 'bar',
         data: formatData("all"),
         options: {
             responsive: true,
             scales: {
-                x: { title: { display: true, text: "Jahre" } },
-                y: { beginAtZero: true, title: { display: true, text: "Tage im Lager" } }
+                x: {
+                    title: { display: true, text: "Years" }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: "Days in Inventory" }
+                }
             },
             plugins: {
                 legend: { display: true },
@@ -272,14 +279,16 @@
         }
     });
 
+    // Update the chart when a new category is selected
     function updateInventoryChart() {
         let selectedCategory = document.getElementById("categorySelect").value;
         inventoryChart.data = formatData(selectedCategory);
         inventoryChart.update();
     }
 
+    // Generate the data for the chart dynamically
     function formatData(category = "all") {
-        let labels = Object.keys(inventoryData);
+        let labels = Object.keys(inventoryData); // Dynamically generate years
         let datasets = [];
 
         if (category === "all") {
@@ -298,6 +307,7 @@
 
         return { labels, datasets };
     }
+
     // Lagerbestandsoptimierung ende
 
     // Standardjahr auf 2024 setzen
@@ -344,9 +354,9 @@
     let resourceHeatmapChart = new Chart(resourceHeatmapCtx, {
         type: "bar",
         data: {
-            labels: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+            labels: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
             datasets: [{
-                label: "Kapazitätsauslastung",
+                label: "capacity utilization",
                 data: resourceUsageData[selectedYearHeatmap],
                 backgroundColor: resourceUsageData[selectedYearHeatmap].map(value => getHeatmapColor(value))
             }]
@@ -389,9 +399,9 @@
     let auctionCountChart = new Chart(auctionCountCtx, {
         type: "line",
         data: {
-            labels: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+            labels: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
             datasets: [{
-                label: "Anzahl Auktionen",
+                label: "Number of Auctions",
                 data: auctionData[selectedYearAuction],
                 borderColor: "#0C59CF",
                 backgroundColor: "rgba(12, 89, 207, 0.2)",
@@ -427,29 +437,29 @@
     // 📊 Durchschnittliche Vorbereitungszeiten für verschiedene Jahre
     const preparationDataByYear = {
         "2020": {
-            schätzung: [6, 9, 4, 3, 5, 7, 5, 3, 2],
+            estimation: [6, 9, 4, 3, 5, 7, 5, 3, 2],
             marketing: [12, 11, 9, 6, 12, 10, 8, 5, 6],
-            logistik: [4, 7, 10, 5, 5, 3, 2, 3, 4]
+            logistics: [4, 7, 10, 5, 5, 3, 2, 3, 4]
         },
         "2021": {
-            schätzung: [7, 10, 5, 3, 6, 8, 6, 4, 3],
+            estimation: [7, 10, 5, 3, 6, 8, 6, 4, 3],
             marketing: [13, 12, 10, 7, 13, 11, 9, 6, 7],
-            logistik: [5, 8, 11, 6, 6, 4, 3, 3, 4]
+            logistics: [5, 8, 11, 6, 6, 4, 3, 3, 4]
         },
         "2022": {
-            schätzung: [7, 10, 5, 3, 6, 8, 6, 4, 3],
+            estimation: [7, 10, 5, 3, 6, 8, 6, 4, 3],
             marketing: [14, 12, 10, 7, 14, 12, 9, 6, 8],
-            logistik: [5, 8, 12, 5, 6, 4, 3, 3, 4]
+            logistics: [5, 8, 12, 5, 6, 4, 3, 3, 4]
         },
         "2023": {
-            schätzung: [8, 11, 6, 4, 7, 9, 7, 5, 4],
+            estimation: [8, 11, 6, 4, 7, 9, 7, 5, 4],
             marketing: [15, 13, 11, 8, 15, 13, 10, 7, 9],
-            logistik: [6, 9, 13, 6, 7, 5, 4, 4, 5]
+            logistics: [6, 9, 13, 6, 7, 5, 4, 4, 5]
         },
         "2024": {
-            schätzung: [7, 10, 5, 3, 6, 8, 6, 4, 3],
+            estimation: [7, 10, 5, 3, 6, 8, 6, 4, 3],
             marketing: [14, 12, 10, 7, 14, 12, 9, 6, 8],
-            logistik: [5, 8, 12, 5, 6, 4, 3, 3, 4]
+            logistics: [5, 8, 12, 5, 6, 4, 3, 3, 4]
         }
     };
 
@@ -457,23 +467,23 @@
     function updatePreparationChart() {
         let selectedYear = document.getElementById("yearSelectPreparation").value;
 
-        preparationChart.data.datasets[0].data = preparationDataByYear[selectedYear].schätzung;
+        preparationChart.data.datasets[0].data = preparationDataByYear[selectedYear].estimation;
         preparationChart.data.datasets[1].data = preparationDataByYear[selectedYear].marketing;
-        preparationChart.data.datasets[2].data = preparationDataByYear[selectedYear].logistik;
+        preparationChart.data.datasets[2].data = preparationDataByYear[selectedYear].logistics;
 
         preparationChart.update();
     }
 
-    // 📊 Initiales gestapeltes Balkendiagramm für das aktuelle Jahr (2024)
+    // 📊 Initial stacked bar chart for the current year (2024)
     let preparationCtx = document.getElementById("preparationTimeChart").getContext("2d");
     let preparationChart = new Chart(preparationCtx, {
         type: "bar",
         data: {
-            labels: ["Gemälde", "Skulpturen", "Möbel", "Keramik", "Moderne Kunst", "Schmuck", "Uhren", "Münzen", "Bücher"],
+            labels: ["Paintings", "Sculptures", "Furniture", "Ceramics", "Modern Art", "Jewelry", "Watches", "Coins", "Books"],
             datasets: [
                 {
-                    label: "Schätzung",
-                    data: preparationDataByYear["2024"].schätzung,
+                    label: "Estimation",
+                    data: preparationDataByYear["2024"].estimation,
                     backgroundColor: "#0C59CF"
                 },
                 {
@@ -482,8 +492,8 @@
                     backgroundColor: "#FEC63D"
                 },
                 {
-                    label: "Logistik",
-                    data: preparationDataByYear["2024"].logistik,
+                    label: "Logistics",
+                    data: preparationDataByYear["2024"].logistics,
                     backgroundColor: "#E91E63"
                 }
             ]
@@ -492,7 +502,7 @@
             responsive: true,
             scales: {
                 x: { stacked: true },
-                y: { stacked: true, title: { display: true, text: "Vorbereitungszeit (Tage)" }, beginAtZero: true }
+                y: { stacked: true, title: { display: true, text: "Preparation Time (Days)" }, beginAtZero: true }
             },
             plugins: {
                 legend: { position: "top" }
@@ -519,7 +529,7 @@
         auctionDurations[year].forEach((month, index) => {
             month.forEach((duration, auctionIndex) => {
                 datasets.push({
-                    label: `Monat ${index + 1} - Auktion ${auctionIndex + 1}`,
+                    label: `Month ${index + 1} - Auction ${auctionIndex + 1}`,
                     data: Array(12).fill(null).map((_, i) => (i === index ? duration : null)), // Daten korrekt zuordnen
                     backgroundColor: colors[index % colors.length],
                     barThickness: 30 // Breitere Balken
@@ -535,14 +545,14 @@
     let auctionDurationChart = new Chart(auctionDurationCtx, {
         type: "bar",
         data: {
-            labels: ["Jan", "Feb", "März", "Apr", "Mai", "Juni", "Juli", "Aug", "Sep", "Okt", "Nov", "Dez"],
+            labels: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
             datasets: getAuctionDataset(selectedYearDuration)
         },
         options: {
             responsive: true,
             layout: {
                 padding: {
-                    left: 10 // Verschiebt die Balken nach rechts
+                    left: 10 // Shifts the bars to the right
                 }
             },
             scales: {
@@ -555,7 +565,7 @@
                 },
                 y: {
                     beginAtZero: true,
-                    title: { display: true, text: "Dauer in Minuten" }
+                    title: { display: true, text: "Duration in Minutes" }
                 }
             },
             plugins: {
@@ -564,7 +574,7 @@
                         label: function (context) {
                             let month = context.chart.data.labels[context.dataIndex];
                             let value = context.raw;
-                            return `${month} - Dauer: ${value} Minuten`;
+                            return `${month} - Duration: ${value} minutes`;
                         }
                     }
                 },
@@ -659,10 +669,10 @@
     let revenueChart = new Chart(revenueChartCtx, {
         type: 'bar',
         data: {
-            labels: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+            labels: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
             datasets: [{
-                label: 'Monatlicher Umsatz (€)',
-                data: revenueData['2024'],  // Standardmäßig das Jahr 2024
+                label: 'Monthly Revenue (€)',
+                data: revenueData['2024'],  // Default year 2024
                 backgroundColor: '#0C59CF',
                 borderColor: '#0844A4',
                 borderWidth: 1
@@ -675,7 +685,7 @@
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Umsatz in €'
+                        text: 'Revenue in €'
                     }
                 }
             }
@@ -687,7 +697,7 @@
         revenueChart.data.datasets[0].data = revenueData[selectedYear];
         revenueChart.update();
 
-        // Gesamtumsatz aktualisieren
+        // Update total revenue
         let totalRevenue = revenueData[selectedYear].reduce((acc, curr) => acc + curr, 0);
         document.getElementById('totalRevenue').innerText = '€' + totalRevenue.toLocaleString();
     }

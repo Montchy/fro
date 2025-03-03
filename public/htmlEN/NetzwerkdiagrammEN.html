@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network of Buyer-Seller Relationships in the Art and Antiques Trade</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #controls {
+            margin-bottom: 20px;
+        }
+
+        select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .chart {
+            width: 100%;
+            height: 800px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            display: none;
+            pointer-events: none;
+            font-size: 12px;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #legend {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        #legend ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #legend li {
+            margin-bottom: 5px;
+        }
+
+        .legend-box {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            min-width: 200px;
+        }
+
+        .legend-box strong {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .legend-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 12px;
+            color: #555;
+        }
+
+        .legend-box ul li {
+            margin-bottom: 5px;
+        }
+
+        body {
+            background: linear-gradient(135deg, #FFD783, #FFFFFF);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+
+        .chart {
+            border: 3px solid #FFD783;
+            border-radius: 15px;
+            padding: 20px;
+            background-color: #FFFFFF;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; /* Wichtig für konsistentes Layout */
+            height: 100%;
+        }
+
+        #theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #FFFFFF;
+            color: #333;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 16px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #theme-toggle:hover {
+            background-color: #E0A800;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+        }
+        #particles-js {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            background: linear-gradient(135deg, #f5f7fa 0%, #FEC63D 100%);
+        }
+
+    </style>
+</head>
+<body>
+<h1>Network of Buyer-Seller Relationships in the Art and Antiques Trade</h1>
+<button id="theme-toggle">🌙</button>
+<div id="particles-js"></div>
+<div id="controls">
+    <select id="view-selector" onchange="updateView()">
+        <option value="all">All Relationships</option>
+        <option value="buyers">Only Buyers</option>
+        <option value="sellers">Only Sellers</option>
+    </select>
+    <select id="specific-selector" onchange="updateSpecificView()" style="display: none;"></select>
+</div>
+
+<div class="chart" id="chart"></div>
+<div class="tooltip" id="tooltip"></div>
+
+<div id="legend" style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px;">
+    <h3 style="color: #333; font-size: 16px; font-weight: bold;">Legends:</h3>
+    <div style="display: flex; justify-content: center; gap: 20px;">
+        <div class="legend-box">
+            <strong>Participants:</strong>
+            <ul>
+                <li style="color: #5f8360;">Customers</li>
+                <li style="color: #7d008c;">Sellers</li>
+            </ul>
+        </div>
+        <div class="legend-box">
+            <strong>Categories:</strong>
+            <ul>
+                <li style="color: #FF7043;">Art</li>
+                <li style="color: #29B6F6;">Antiques</li>
+                <li style="color: #AB47BC;">Jewelry</li>
+            </ul>
+        </div>
+        <div class="legend-box">
+            <strong>Customer-Object Relationships:</strong>
+            <ul>
+                <li style="color: #2E7D32;">Purchased (Customer → Object)</li>
+                <li style="color: #FBC02D;">Interested (Customer → Object)</li>
+            </ul>
+        </div>
+        <div class="legend-box">
+            <strong>Seller-Object Relationships:</strong>
+            <ul>
+                <li style="color: #1976D2;">Sold (Seller → Object)</li>
+                <li style="color: #ccc;">Introduced (Seller → Object)</li>
+                <li style="color: #4d4040;">No Relationship (Seller → Object)</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    const data = {
+        buyers: [
+            { id: "B1", name: "Anna Müller" },
+            { id: "B2", name: "Max Schmidt" },
+            { id: "B3", name: "Lisa Weber" },
+            { id: "B4", name: "Tom Meier" },
+            { id: "B5", name: "Sophie Krause" },
+            { id: "B6", name: "Daniel Richter" },
+            { id: "B7", name: "Julia Wagner" },
+            { id: "B8", name: "Markus Lehmann" },
+            { id: "B9", name: "Nicole Fischer" },
+            { id: "B10", name: "Stefan Becker" }
+        ],
+        sellers: [
+            { id: "S1", name: "Hans Becker" },
+            { id: "S2", name: "Maria Fischer" },
+            { id: "S3", name: "Peter Wagner" },
+            { id: "S4", name: "Clara Lehmann" },
+            { id: "S5", name: "Uwe Hoffmann" }
+        ],
+        objects: [
+            { id: "O1", name: "Painting 'Sunset'", category: "Art", status: "Sold" },
+            { id: "O2", name: "18th Century Vase", category: "Antiques", status: "In Progress" },
+            { id: "O3", name: "Diamond Jewelry Set", category: "Jewelry", status: "Sold" },
+            { id: "O4", name: "Modern Sculpture", category: "Art", status: "Sold" },
+            { id: "O5", name: "Antique Globe", category: "Antiques", status: "Interested" },
+            { id: "O6", name: "Bronze Statue", category: "Art", status: "Sold" },
+            { id: "O7", name: "Ming Vase", category: "Antiques", status: "Interested" },
+            { id: "O8", name: "Ruby Ring", category: "Jewelry", status: "Interested" },
+            { id: "O9", name: "Baroque Sofa", category: "Antiques", status: "Interested" },
+            { id: "O10", name: "Gold Medal 19th Century", category: "Jewelry", status: "Sold" },
+            { id: "O11", name: "Oil Painting 'Forest'", category: "Art", status: "Sold" },
+            { id: "O12", name: "Samurai Sword", category: "Antiques", status: "Interested" },
+            { id: "O13", name: "Roman Statue", category: "Art", status: "Interested" },
+            { id: "O14", name: "Gemstone Necklace", category: "Jewelry", status: "Interested" },
+            { id: "O15", name: "Antique Clock", category: "Antiques", status: "Sold" },
+            { id: "O16", name: "Historical Manuscript", category: "Antiques", status: "Interested" },
+            { id: "O17", name: "Ruby Earrings", category: "Jewelry", status: "Interested" },
+            { id: "O18", name: "Medieval Helmet", category: "Antiques", status: "Sold" },
+            { id: "O19", name: "Bronze Bust", category: "Art", status: "Interested" },
+            { id: "O20", name: "Diamond Necklace", category: "Jewelry", status: "Sold" }
+        ],
+
+        relationships: [
+            // Kaufbeziehungen (grün für Käufer → Objekt, dunkelblau für Verkäufer → Objekt)
+            { buyer: "B1", seller: "S1", object: "O1", type: "Purchased" },
+            { buyer: "B3", seller: "S2", object: "O3", type: "Purchased" },
+            { buyer: "B4", seller: "S3", object: "O4", type: "Purchased" },
+            { buyer: "B7", seller: "S4", object: "O6", type: "Purchased" },
+            { buyer: "B8", seller: "S5", object: "O10", type: "Purchased" },
+            { buyer: "B9", seller: "S2", object: "O11", type: "Purchased" },
+            { buyer: "B10", seller: "S3", object: "O15", type: "Purchased" },
+            { buyer: "B2", seller: "S4", object: "O18", type: "Purchased" },
+            { buyer: "B5", seller: "S1", object: "O20", type: "Purchased" },
+
+// Seller → Object (Sold = dark blue, Interested = gray)
+            { seller: "S1", object: "O1", type: "Sold" },
+            { seller: "S2", object: "O3", type: "Sold" },
+            { seller: "S3", object: "O4", type: "Sold" },
+            { seller: "S4", object: "O6", type: "Sold" },
+            { seller: "S5", object: "O10", type: "Sold" },
+            { seller: "S2", object: "O11", type: "Sold" },
+            { seller: "S3", object: "O15", type: "Sold" },
+            { seller: "S4", object: "O18", type: "Sold" },
+            { seller: "S1", object: "O20", type: "Sold" },
+
+            // Interessensbeziehungen (gelb für Käufer → Objekt, grau für Verkäufer → Objekt)
+            { buyer: "B2", seller: "S2", object: "O2", type: "Interested" },
+            { buyer: "B5", seller: "S4", object: "O5", type: "Interested" },
+            { buyer: "B6", seller: "S3", object: "O7", type: "Interested" },
+            { buyer: "B7", seller: "S5", object: "O8", type: "Interested" },
+            { buyer: "B8", seller: "S1", object: "O9", type: "Interested" },
+            { buyer: "B9", seller: "S2", object: "O12", type: "Interested" },
+            { buyer: "B10", seller: "S3", object: "O13", type: "Interested" },
+            { buyer: "B1", seller: "S4", object: "O14", type: "Interested" },
+            { buyer: "B3", seller: "S5", object: "O16", type: "Interested" },
+            { buyer: "B4", seller: "S1", object: "O17", type: "Interested" },
+            { buyer: "B6", seller: "S2", object: "O19", type: "Interested" },
+
+            { seller: "S2", object: "O2", type: "Introduced" },
+            { seller: "S4", object: "O5", type: "Introduced" },
+            { seller: "S3", object: "O7", type: "Introduced" },
+            { seller: "S5", object: "O8", type: "Introduced" },
+            { seller: "S1", object: "O9", type: "Introduced" },
+            { seller: "S2", object: "O12", type: "Introduced" },
+            { seller: "S3", object: "O13", type: "Introduced" },
+            { seller: "S4", object: "O14", type: "Introduced" },
+            { seller: "S5", object: "O16", type: "Introduced" },
+            { seller: "S1", object: "O17", type: "Introduced" },
+            { seller: "S2", object: "O19", type: "Introduced" }
+
+        ]
+    };
+    const width = 1200;
+    const height = 800;
+
+    const chart = d3.select("#chart");
+    const tooltip = d3.select("#tooltip");
+
+    function renderAll(filteredData = data) {
+        chart.selectAll("*").remove();
+
+        const svg = chart.append("svg")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("viewBox", `0 0 ${width} ${height}`)
+            .call(
+                d3.zoom().on("zoom", (event) => {
+                    svgGroup.attr("transform", event.transform);
+                })
+            );
+
+        const svgGroup = svg.append("g");
+
+        const buyerNodes = filteredData.buyers.map(d => ({ ...d, type: "buyer" }));
+        const sellerNodes = filteredData.sellers.map(d => ({ ...d, type: "seller" }));
+        const objectNodes = filteredData.objects.map(d => ({ ...d, type: "object" }));
+        const nodes = [...buyerNodes, ...sellerNodes, ...objectNodes];
+
+        const links = filteredData.relationships.map(rel => ({
+            source: nodes.find(node => node.id === rel.buyer || node.id === rel.seller),
+            target: nodes.find(node => node.id === rel.object),
+            type: rel.type
+        }));
+
+        const simulation = d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links).id(d => d.id).distance(200))
+            .force("charge", d3.forceManyBody().strength(-500))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collision", d3.forceCollide().radius(30));
+
+        const link = svgGroup.selectAll(".link")
+            .data(links)
+            .enter()
+            .append("line")
+            .attr("stroke", d => {
+                if (d.type === "Gekauft") return "#2E7D32";
+                if (d.type === "Verkauft") return "#1976D2";
+                if (d.type === "Interessiert") return "#FBC02D";
+                if (d.type === "Vorgestellt") return "#4d4040";
+                return "#ccc";
+            })
+            .attr("stroke-width", 2);
+
+        const node = svgGroup.selectAll(".node")
+            .data(nodes)
+            .enter()
+            .append("circle")
+            .attr("r", 15)
+            .attr("fill", d => {
+                if (d.type === "buyer") return "#5f8360";
+                if (d.type === "seller") return "#7d008c";
+                if (d.category === "Kunst") return "#FF7043";
+                if (d.category === "Antiquitäten") return "#29B6F6";
+                return "#AB47BC";
+            })
+            .on("mouseover", (event, d) => {
+                tooltip.style("display", "block")
+                    .style("left", `${event.pageX + 10}px`)
+                    .style("top", `${event.pageY - 20}px`)
+                    .html(` <strong>${d.name}</strong><br>
+    ${d.category || ""} ${d.status || "Keine Beziehungen"}<br>
+    Verbindung: ${d.type === "buyer" ? "Kunde → Objekt" : d.type === "seller" ? "Verkäufer → Objekt" : "Objekt"}
+`);
+            })
+            .on("mouseout", () => {
+                tooltip.style("display", "none");
+            })
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+
+        const labels = svgGroup.selectAll(".label")
+            .data(nodes)
+            .enter()
+            .append("text")
+            .attr("font-size", "10px")
+            .attr("text-anchor", "middle")
+            .attr("dy", -20)
+            .text(d => d.name);
+
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => Math.max(0, Math.min(width, d.source.x)))
+                .attr("y1", d => Math.max(0, Math.min(height, d.source.y)))
+                .attr("x2", d => Math.max(0, Math.min(width, d.target.x)))
+                .attr("y2", d => Math.max(0, Math.min(height, d.target.y)));
+
+            node
+                .attr("cx", d => (d.x = Math.max(30, Math.min(width - 30, d.x))))
+                .attr("cy", d => (d.y = Math.max(30, Math.min(height - 30, d.y))));
+
+            labels
+                .attr("x", d => d.x)
+                .attr("y", d => d.y);
+        });
+
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+    }
+
+    function updateView() {
+        const view = document.getElementById("view-selector").value;
+        const specificSelector = document.getElementById("specific-selector");
+
+        if (view === "buyers") {
+            specificSelector.style.display = "inline-block";
+            specificSelector.innerHTML = `<option value="all">All</option>` +
+                data.buyers.map(b => `<option value="${b.id}">${b.name}</option>`).join("");
+            renderAll({
+                buyers: data.buyers,
+                sellers: [],
+                objects: data.objects,
+                relationships: data.relationships.filter(rel => rel.buyer)
+            });
+        } else if (view === "sellers") {
+            specificSelector.style.display = "inline-block";
+            specificSelector.innerHTML = `<option value="all">All</option>` +
+                data.sellers.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
+            renderAll({
+                buyers: [],
+                sellers: data.sellers,
+                objects: data.objects,
+                relationships: data.relationships.filter(rel => rel.seller)
+            });
+        } else {
+            specificSelector.style.display = "none";
+            renderAll(data);
+        }
+    }
+
+    function updateSpecificView() {
+        const specificId = document.getElementById("specific-selector").value;
+        const view = document.getElementById("view-selector").value;
+
+        if (specificId === "all") {
+            updateView(); // Zeige alle für die aktuelle Auswahl an
+        } else if (view === "buyers") {
+            renderAll({
+                buyers: data.buyers.filter(b => b.id === specificId),
+                sellers: data.sellers,
+                objects: data.objects,
+                relationships: data.relationships.filter(rel => rel.buyer === specificId)
+            });
+        } else if (view === "sellers") {
+            renderAll({
+                buyers: data.buyers,
+                sellers: data.sellers.filter(s => s.id === specificId),
+                objects: data.objects,
+                relationships: data.relationships.filter(rel => rel.seller === specificId)
+            });
+        }
+    }
+
+    const themeToggle = document.getElementById("theme-toggle");
+    let darkMode = false;
+
+    function toggleTheme() {
+        if (!darkMode) {
+            document.body.style.background = "linear-gradient(135deg, #0844A4, #000000)";
+            document.querySelector(".chart").style.borderColor = "#0844A4";
+            document.querySelector(".chart").style.backgroundColor = "#000000";
+            document.querySelector("h1").style.color = "#FFFFFF";
+            document.querySelectorAll("#legend h3").forEach(el => el.style.color = "#FFFFFF");
+            document.querySelectorAll("select").forEach(select => {
+                select.style.backgroundColor = "#0844A4";
+                select.style.color = "#FFFFFF";
+                select.style.borderColor = "#FFFFFF";
+            });
+            document.querySelectorAll(".legend-box").forEach(box => {
+                box.style.backgroundColor = "#0844A4";
+                box.style.color = "#FFFFFF";
+                box.style.borderColor = "#FFFFFF";
+            });
+            document.getElementById("particles-js").style.background =
+                "linear-gradient(135deg, #0844A4 0%, #75A9F9 100%)";
+            document.querySelectorAll(".legend-box strong").forEach(el => el.style.color = "#FFFFFF");
+            themeToggle.style.backgroundColor = "#0844A4";
+            themeToggle.style.color = "#FFFFFF";
+            themeToggle.onmouseover = () => themeToggle.style.backgroundColor = "#0844A4";
+            themeToggle.onmouseout = () => themeToggle.style.backgroundColor = "#0C59CF";
+            themeToggle.textContent = "☀️";
+        } else {
+            document.body.style.background = "linear-gradient(135deg, #FFD783, #FFFFFF)";
+            document.querySelector(".chart").style.borderColor = "#FFD783";
+            document.querySelector(".chart").style.backgroundColor = "#FFFFFF";
+            document.querySelector("h1").style.color = "#333";
+            document.querySelectorAll("#legend h3").forEach(el => el.style.color = "#333");
+            document.querySelectorAll("select").forEach(select => {
+                select.style.backgroundColor = "#FFFFFF";
+                select.style.color = "#000000";
+                select.style.borderColor = "#ccc";
+            });
+            document.querySelectorAll(".legend-box").forEach(box => {
+                box.style.backgroundColor = "#f9f9f9";
+                box.style.color = "#555";
+                box.style.borderColor = "#ccc";
+            });
+            document.getElementById("particles-js").style.background =
+                "linear-gradient(135deg, #f5f7fa 0%, #FEC63D 100%)";
+            document.querySelectorAll(".legend-box strong").forEach(el => el.style.color = "#000000");
+            themeToggle.style.backgroundColor = "#FFFFFF";
+            themeToggle.style.color = "#333";
+            themeToggle.onmouseover = () => themeToggle.style.backgroundColor = "#E0A800";
+            themeToggle.onmouseout = () => themeToggle.style.backgroundColor = "#FFFFFF";
+            themeToggle.textContent = "🌙";
+        }
+        darkMode = !darkMode;
+    }
+    themeToggle.addEventListener("click", toggleTheme);
+    renderAll();
+    particlesJS("particles-js", {
+        particles: {
+            number: {
+                value: 100,
+                density: {
+                    enable: true,
+                    value_area: 800
+                }
+            },
+            color: {
+                value: "#ffffff"
+            },
+            shape: {
+                type: "circle",
+                stroke: {
+                    width: 0
+                }
+            },
+            opacity: {
+                value: 0.5,
+                random: false
+            },
+            size: {
+                value: 3,
+                random: true
+            },
+            line_linked: {
+                enable: true,
+                distance: 150,
+                color: "#ffffff",
+                opacity: 0.4,
+                width: 1
+            },
+            move: {
+                enable: true,
+                speed: 2,
+                direction: "none",
+                random: false,
+                straight: false,
+                out_mode: "out",
+                bounce: false
+            }
+        },
+        interactivity: {
+            detect_on: "canvas",
+            events: {
+                onhover: {
+                    enable: true,
+                    mode: "grab"
+                },
+                onclick: {
+                    enable: true,
+                    mode: "push"
+                },
+                resize: true
+            }
+        },
+        retina_detect: true
+    });
+</script>
+</body>
+</html>
