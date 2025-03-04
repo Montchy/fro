@@ -8,6 +8,7 @@ import user4 from "./images/nutzer.png";
 import bild5 from "./images/galerie.png";
 import auk6 from "./images/richter.png";
 import gra7 from "./images/gr.png";
+import rob from "./images/roboz.png";
 import setting8 from "./images/die-einstellungen.png";
 
 const LeftBar = ({ darkMode }) => {  // Dark Mode als Prop empfangen
@@ -19,11 +20,14 @@ const LeftBar = ({ darkMode }) => {  // Dark Mode als Prop empfangen
         { image: lup2, route: '/search' },
         { image: haus3, route: '/exponate' },
         { image: user4, route: '/persons' },
+<<<<<<< HEAD
         { image: bild5, route: '/gallery' },
         
+=======
+>>>>>>> 24c475ca6a2224661c71331dbd75c207ce0d39c8
         { image: auk6, route: '/auction' },
         { image: gra7, route: '/graphs' },
-        { image: gra7, route: '/chatbot' },
+        { image: rob, route: '/chatbot' },
     ];
 
     const handleMouseEnter = (index) => {

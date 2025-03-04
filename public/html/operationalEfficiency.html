@@ -90,6 +90,7 @@
     </style>
 </head>
 <body>
+<h1 style="text-align: center; font-size: 2.5rem; color: #0844A4; margin-top: 20px;">Kinsky Leistungsdashboard</h1>
 <div id="particles-js"></div>
 <div class="grid">
     <!-- Lagerbestandsoptimierung -->
@@ -113,6 +114,27 @@
         </select>
 
         <canvas id="inventoryChart"></canvas>
+    </div>
+
+    <div class="card">
+        <h2>Umsatzanalyse</h2>
+
+        <p>Dieses Diagramm zeigt den monatlichen Umsatz des Auktionshauses im gewählten Jahr. Die Umsatzdaten sind aufgeschlüsselt nach Auktionen und Kategorien, um die finanzielle Leistung pro Bereich besser zu verstehen.</p>
+
+        <p><strong>Gesamtumsatz im gewählten Jahr:</strong>
+            <span id="totalRevenue" style="font-size: 1.2rem; color: #0C59CF;">€100,000</span>
+        </p>
+
+        <label for="yearSelectRevenue"><strong>Jahr wählen:</strong></label>
+        <select id="yearSelectRevenue" onchange="updateRevenueChart()">
+            <option value="2024" selected>2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+        </select>
+
+        <canvas id="revenueChart"></canvas>
     </div>
 
     <div class="card">
@@ -144,6 +166,23 @@
     </div>
 
     <div class="card">
+        <h2>Durchschnittliche Vorbereitungszeit</h2>
+
+        <p>Dieses Diagramm zeigt die durchschnittliche Vorbereitungszeit pro Kategorie und Jahr.
+            Die Vorbereitungszeit umfasst Schätzung, Marketing und Logistik.</p>
+
+        <label for="yearSelectPreparation"><strong>Jahr wählen:</strong></label>
+        <select id="yearSelectPreparation" onchange="updatePreparationChart()">
+            <option value="2024" selected>2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+        </select>
+
+        <canvas id="preparationTimeChart"></canvas>
+    </div>
+    <div class="card">
         <h2>Anzahl der Auktionen</h2>
 
         <p>Dieses Diagramm zeigt die Anzahl der Auktionen im gewählten Jahr.
@@ -166,23 +205,6 @@
         <canvas id="auctionCountChart"></canvas>
     </div>
 
-    <div class="card">
-        <h2>Durchschnittliche Vorbereitungszeit</h2>
-
-        <p>Dieses Diagramm zeigt die durchschnittliche Vorbereitungszeit pro Kategorie und Jahr.
-            Die Vorbereitungszeit umfasst Schätzung, Marketing und Logistik.</p>
-
-        <label for="yearSelectPreparation"><strong>Jahr wählen:</strong></label>
-        <select id="yearSelectPreparation" onchange="updatePreparationChart()">
-            <option value="2024" selected>2024</option>
-            <option value="2023">2023</option>
-            <option value="2022">2022</option>
-            <option value="2021">2021</option>
-            <option value="2020">2020</option>
-        </select>
-
-        <canvas id="preparationTimeChart"></canvas>
-    </div>
     <div class="card">
         <h2>Durschnittliche Auktionsdauer⏳</h2>
         <p>Gibt Einblick, wie lange eine Auktion im Schnitt dauert – wichtig für die Planung & Optimierung.</p>
@@ -624,6 +646,52 @@
         },
         retina_detect: true
     });
+
+    const revenueData = {
+        "2020": [5000, 7000, 8000, 6000, 10000, 11000, 12000, 8000, 7500, 6500, 9000, 9500],
+        "2021": [5500, 7200, 8500, 6300, 10500, 11500, 12500, 8200, 7600, 6700, 9200, 9600],
+        "2022": [5700, 7400, 8600, 6400, 10700, 11700, 12700, 8300, 7700, 6800, 9300, 9700],
+        "2023": [5800, 7500, 8700, 6500, 10800, 11800, 12800, 8400, 7800, 6900, 9400, 9800],
+        "2024": [5900, 7600, 8800, 6600, 10900, 11900, 12900, 8500, 7900, 7000, 9500, 9900]
+    };
+
+    let revenueChartCtx = document.getElementById('revenueChart').getContext('2d');
+    let revenueChart = new Chart(revenueChartCtx, {
+        type: 'bar',
+        data: {
+            labels: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+            datasets: [{
+                label: 'Monatlicher Umsatz (€)',
+                data: revenueData['2024'],  // Standardmäßig das Jahr 2024
+                backgroundColor: '#0C59CF',
+                borderColor: '#0844A4',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Umsatz in €'
+                    }
+                }
+            }
+        }
+    });
+
+    function updateRevenueChart() {
+        let selectedYear = document.getElementById('yearSelectRevenue').value;
+        revenueChart.data.datasets[0].data = revenueData[selectedYear];
+        revenueChart.update();
+
+        // Gesamtumsatz aktualisieren
+        let totalRevenue = revenueData[selectedYear].reduce((acc, curr) => acc + curr, 0);
+        document.getElementById('totalRevenue').innerText = '€' + totalRevenue.toLocaleString();
+    }
+
 </script>
 </body>
 </html>
