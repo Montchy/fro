@@ -20,11 +20,7 @@ const LeftBar = ({ darkMode }) => {  // Dark Mode als Prop empfangen
         { image: lup2, route: '/search' },
         { image: haus3, route: '/exponate' },
         { image: user4, route: '/persons' },
-<<<<<<< HEAD
         { image: bild5, route: '/gallery' },
-        
-=======
->>>>>>> 24c475ca6a2224661c71331dbd75c207ce0d39c8
         { image: auk6, route: '/auction' },
         { image: gra7, route: '/graphs' },
         { image: rob, route: '/chatbot' },

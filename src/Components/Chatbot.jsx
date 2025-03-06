@@ -1,189 +1,241 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
-const PriceSuggestionChatbot = ({ darkMode, isEnglish }) => {
-  const [messages, setMessages] = useState([
-    { text: isEnglish ? "Hello! Describe your product (e.g., jewelry, antiques, etc.), and I'll give you a price suggestion." : "Hallo! Beschreibe mir dein Produkt (z. B. Schmuck, Antiquitäten, etc.), und ich mache dir einen Preisvorschlag.", isUser: false },
-  ]);
-  const [inputValue, setInputValue] = useState("");
-  const [history, setHistory] = useState([]); 
-  const [selectedHistory, setSelectedHistory] = useState(null); 
+const PriceSuggestionChatbot = () => {
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [chats, setChats] = useState([]); // Liste der alten Chats
+  const chatRef = useRef(null); // Ref für das Scrollen
+
+  // Automatisch nach unten scrollen, wenn neue Nachrichten hinzugefügt werden
   useEffect(() => {
-    const savedHistory = localStorage.getItem("chatHistory");
-    if (savedHistory) {
-      setHistory(JSON.parse(savedHistory));
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
-  }, []);
+  }, [messages]);
 
-  useEffect(() => {
-    localStorage.setItem("chatHistory", JSON.stringify(history));
-  }, [history]);
-
+  // Nachricht senden
   const sendMessage = async () => {
-    if (inputValue.trim() === "") return;
+    if (!input.trim()) return;
 
-    const userMessage = { text: inputValue, isUser: true };
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
-
-    const botMessage = { text: await fetchPriceSuggestion(inputValue), isUser: false };
-    setMessages((prevMessages) => [...prevMessages, botMessage]);
-
-    setHistory((prevHistory) => [
-      ...prevHistory,
-      { question: inputValue, answer: botMessage.text },
+    // Benutzernachricht hinzufügen
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { role: "user", content: input },
     ]);
 
-    setInputValue("");
-  };
+    try {
+      // Anfrage an den Server senden
+      const response = await fetch("http://localhost:5004/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input }),
+      });
 
-  const fetchPriceSuggestion = async (description) => {
-   
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const price = Math.floor(Math.random() * 1000) + 100; 
-        resolve(
-          isEnglish
-            ? `Based on your description, I suggest a price of around ${price}€.`
-            : `Basierend auf deiner Beschreibung schlage ich einen Preis von ca. ${price}€ vor.`
-        );
-      }, 1000); 
-    });
-  };
+      if (!response.ok) {
+        throw new Error("Server antwortet nicht.");
+      }
 
-  const handleKeyPress = (event) => {
-    if (event.key === "Enter") {
-      sendMessage();
+      // Antwort vom Server verarbeiten
+      const data = await response.json();
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { role: "assistant", content: data.reply || "Keine Antwort erhalten." },
+      ]);
+    } catch (error) {
+      console.error("Fehler bei der API-Anfrage:", error);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { role: "assistant", content: "❌ Fehler: Keine Verbindung zum Server." },
+      ]);
     }
+
+    // Eingabefeld leeren
+    setInput("");
   };
 
-  const showHistoryDetails = (index) => {
-    setSelectedHistory(history[index]);
+  // Neuen Chat starten
+  const startNewChat = () => {
+    if (messages.length > 0) {
+      setChats((prevChats) => [...prevChats, messages]);
+    }
+    setMessages([]);
   };
 
   return (
-    <div style={{ display: "flex", height: "100vh", padding: "20px", backgroundColor: darkMode ? "#121212" : "#f9fafb" }}>
-      {/* Chatbot (links) */}
-      <div style={{ flex: 2, display: "flex", flexDirection: "column", marginRight: "20px" }}>
-        <div style={{ ...styles.chatContainer, backgroundColor: darkMode ? "#1e1e1e" : "#ffffff", color: darkMode ? "#ffffff" : "#000000" }}>
-          <div style={{ ...styles.chatHeader, backgroundColor: darkMode ? "#E0A800" : "#E0A800", color: darkMode ? "#000000" : "#ffffff" }}>
-            {isEnglish ? "AI Price Suggestion Chatbot" : "KI-Preisvorschlags-Chatbot"}
-          </div>
-          <div style={{ ...styles.chatMessages, backgroundColor: darkMode ? "#1e1e1e" : "#f9f9f9" }}>
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                style={{
-                  ...styles.message,
-                  ...(message.isUser ? styles.userMessage : styles.botMessage),
-                  backgroundColor: message.isUser ? (darkMode ? "#E0A800" : "#E0A800") : (darkMode ? "#333333" : "#e0e0e0"),
-                  color: message.isUser ? (darkMode ? "#000000" : "#ffffff") : (darkMode ? "#ffffff" : "#000000"),
-                }}
-              >
-                {message.text}
-              </div>
-            ))}
-          </div>
-          <div style={{ ...styles.chatInput, borderTop: darkMode ? "1px solid #444" : "1px solid #ddd" }}>
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={isEnglish ? "Describe your product..." : "Beschreibe dein Produkt..."}
-              style={{ ...styles.inputField, backgroundColor: darkMode ? "#333" : "#ffffff", color: darkMode ? "#ffffff" : "#000000" }}
-            />
-            <button
-              onClick={sendMessage}
-              style={{ ...styles.sendButton, backgroundColor: darkMode ? "#E0A800" : "#E0A800", color: darkMode ? "#000000" : "#ffffff" }}
+    <div style={styles.container}>
+      {/* Linke Seite: Chatbot */}
+      <div style={styles.chatbotContainer}>
+        {/* Chat-Header */}
+        <div style={styles.header}>
+          <h1 style={styles.title}>Chatbot mit Ollama</h1>
+          <button onClick={startNewChat} style={styles.newChatButton}>
+            ➕
+          </button>
+        </div>
+
+        {/* Chat-Fenster */}
+        <div ref={chatRef} style={styles.chatWindow}>
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              style={{
+                ...styles.message,
+                alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                backgroundColor: msg.role === "user" ? "rgba(240,175,77,1)" : "#e0e0e0",
+                color: msg.role === "user" ? "#fff" : "#000",
+              }}
             >
-              {isEnglish ? "Send" : "Senden"}
-            </button>
-          </div>
+              <strong>{msg.role === "user" ? "Du" : "Bot"}:</strong> {msg.content}
+            </div>
+          ))}
+        </div>
+
+        {/* Eingabefeld und Senden-Button */}
+        <div style={styles.inputContainer}>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            placeholder="Schreibe etwas..."
+            style={styles.input}
+          />
+          <button onClick={sendMessage} style={styles.button}>
+            Senden
+          </button>
         </div>
       </div>
 
-      {/* Historie (rechts) */}
-      <div style={{ flex: 1, backgroundColor: darkMode ? "#1e1e1e" : "#ffffff", color: darkMode ? "#ffffff" : "#000000", padding: "20px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)" }}>
-        <h3>{isEnglish ? "Chat History" : "Chat-Verlauf"}</h3>
-        {history.length === 0 ? (
-          <p>{isEnglish ? "No history yet." : "Noch keine Historie vorhanden."}</p>
-        ) : (
-          <div>
-            {history.map((item, index) => (
-              <div
-                key={index}
-                style={{ marginBottom: "10px", cursor: "pointer", padding: "10px", borderBottom: darkMode ? "1px solid #444" : "1px solid #ddd" }}
-                onClick={() => showHistoryDetails(index)}
-              >
-                <p style={{ margin: 0 }}><strong>{isEnglish ? "Q" : "F"}:</strong> {item.question}</p>
-                <p style={{ margin: 0 }}><strong>{isEnglish ? "A" : "A"}:</strong> {item.answer.substring(0, 50)}...</p>
-              </div>
-            ))}
+      {/* Rechte Seite: Alte Chats */}
+      <div style={styles.chatHistoryContainer}>
+        <h2 style={styles.chatHistoryTitle}>Chat-Verlauf</h2>
+        {chats.map((chat, index) => (
+          <div key={index} style={styles.chatHistoryItem}>
+            <strong>Chat {index + 1}</strong>
+            <div style={styles.chatHistoryMessages}>
+              {chat.map((msg, msgIndex) => (
+                <div
+                  key={msgIndex}
+                  style={{
+                    ...styles.chatHistoryMessage,
+                    color: msg.role === "user" ? "rgba(240,175,77,1)" : "#000",
+                  }}
+                >
+                  <strong>{msg.role === "user" ? "Du" : "Bot"}:</strong> {msg.content}
+                </div>
+              ))}
+            </div>
           </div>
-        )}
-
-        {/* Details der ausgewählten Historie */}
-        {selectedHistory && (
-          <div style={{ marginTop: "20px" }}>
-            <h4>{isEnglish ? "Details" : "Details"}</h4>
-            <p><strong>{isEnglish ? "Question" : "Frage"}:</strong> {selectedHistory.question}</p>
-            <p><strong>{isEnglish ? "Answer" : "Antwort"}:</strong> {selectedHistory.answer}</p>
-            <button onClick={() => setSelectedHistory(null)} style={{ ...styles.sendButton, backgroundColor: darkMode ? "#E0A800" : "#E0A800", color: darkMode ? "#000000" : "#ffffff" }}>
-              {isEnglish ? "Close" : "Schließen"}
-            </button>
-          </div>
-        )}
+        ))}
       </div>
     </div>
   );
 };
 
+// Stile
 const styles = {
-  chatContainer: {
-    flex: 1,
-    borderRadius: "10px",
-    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-    overflow: "hidden",
+  container: {
+    display: "flex",
+    height: "100vh",
+  },
+  chatbotContainer: {
+    flex: 3, // Chatbereich breiter
+    maxWidth: "700px", // Breiterer Chatbereich
+    padding: "20px",
+    borderRight: "1px solid #ddd",
+    backgroundColor: "#f9f9f9",
     display: "flex",
     flexDirection: "column",
   },
-  chatHeader: {
-    padding: "15px",
-    textAlign: "center",
-    fontSize: "18px",
-    fontWeight: "bold",
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "20px",
   },
-  chatMessages: {
+  title: {
+    fontSize: "24px",
+    color: "#333",
+  },
+  newChatButton: {
+    padding: "10px",
+    borderRadius: "50%",
+    border: "none",
+    backgroundColor: "rgba(240,175,77,1)",
+    color: "#fff",
+    fontSize: "16px",
+    cursor: "pointer",
+    transition: "background-color 0.3s",
+  },
+  chatWindow: {
     flex: 1,
-    padding: "15px",
     overflowY: "auto",
+    border: "1px solid #ddd",
+    borderRadius: "10px",
+    padding: "15px",
+    marginBottom: "15px",
+    backgroundColor: "#fff",
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
   },
   message: {
-    marginBottom: "10px",
-    padding: "10px",
-    borderRadius: "5px",
     maxWidth: "70%",
+    padding: "10px 15px",
+    borderRadius: "10px",
+    fontSize: "14px",
+    lineHeight: "1.5",
+    wordWrap: "break-word",
   },
-  userMessage: {
-    alignSelf: "flex-end",
-  },
-  botMessage: {
-    alignSelf: "flex-start",
-  },
-  chatInput: {
+  inputContainer: {
     display: "flex",
+    gap: "10px",
   },
-  inputField: {
+  input: {
     flex: 1,
     padding: "10px",
-    border: "none",
+    borderRadius: "8px",
+    border: "1px solid #ddd",
+    fontSize: "14px",
     outline: "none",
-    fontSize: "16px",
+    transition: "border-color 0.3s",
   },
-  sendButton: {
-    border: "none",
+  button: {
     padding: "10px 20px",
+    borderRadius: "8px",
+    border: "none",
+    backgroundColor: "rgba(240,175,77,1)",
+    color: "#fff",
+    fontSize: "14px",
     cursor: "pointer",
-    fontSize: "16px",
+    transition: "background-color 0.3s",
+  },
+  chatHistoryContainer: {
+    flex: 1, // Rechte Seite schmaler
+    maxWidth: "300px", // Schmalerer Bereich für den Chat-Verlauf
+    padding: "20px",
+    backgroundColor: "#fff",
+    overflowY: "auto",
+  },
+  chatHistoryTitle: {
+    fontSize: "20px",
+    color: "#333",
+    marginBottom: "20px",
+  },
+  chatHistoryItem: {
+    marginBottom: "20px",
+  },
+  chatHistoryMessages: {
+    marginTop: "10px",
+    padding: "10px",
+    border: "1px solid #ddd",
+    borderRadius: "10px",
+    backgroundColor: "#f9f9f9",
+  },
+  chatHistoryMessage: {
+    fontSize: "14px",
+    lineHeight: "1.5",
+    marginBottom: "5px",
   },
 };
 

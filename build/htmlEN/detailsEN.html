@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP Customer Details</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #f9fafb, #e6e6e6);
+            color: #333;
+        }
+
+        .container {
+            padding: 20px 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            background: #FEC63D;
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .navigate-button {
+            background-color: #FEC63D;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .navigate-button:hover {
+            background-color: #FEC63D;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #FEC63D;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            padding-bottom: 0;
+        }
+
+        html, body {
+            min-height: 100%;
+        }
+
+        body {
+            overflow: auto;
+        }
+
+        #offersOutput {
+            margin-bottom: 40px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .navigate-button {
+            margin-bottom: 20px;
+        }
+
+        #customerSelect {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9fafb;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.3s ease;
+        }
+
+        #customerSelect:focus {
+            border-color: #FEC63D;
+            outline: none;
+        }
+
+        #customerSelect:hover {
+            background: #f1f1f1;
+        }
+
+        .container {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        #theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #FFFFFF;
+            color: #333;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 16px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #theme-toggle:hover {
+            background-color: #E0A800;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        #particles-js {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            background: linear-gradient(135deg, #f5f7fa 0%, #FEC63D 100%);
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Details about VIP customers</h1>
+</div>
+<div id="particles-js"></div>
+<div class="container">
+    <a href="powercustomers.html" class="navigate-button">Back</a>
+
+    <h2>Details about VIP Customers</h2>
+    <button id="theme-toggle">🌙</button>
+
+    <!-- Purchase History -->
+    <h3>Purchase History</h3>
+    <select id="customerSelect" onchange="updatePurchaseHistory()"></select>
+    <div class="table-container">
+        <table>
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th>Item</th>
+                <th>Amount (€)</th>
+            </tr>
+            </thead>
+            <tbody id="purchaseHistoryTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Preferences -->
+    <h3>Preferences</h3>
+    <div class="chart-container">
+        <canvas id="preferencesChart"></canvas>
+    </div>
+
+    <!-- Offers -->
+    <h3>Targeted Offers</h3>
+    <button class="navigate-button" onclick="generateOffers()">Generate Offers</button>
+    <div id="offersOutput"></div>
+</div>
+
+
+<script>
+    const purchaseHistory = {
+        "Anna Müller": [
+            { date: "2023-01-15", item: "Antique Mirror", amount: 2400 },
+            { date: "2023-02-05", item: "Baroque Desk", amount: 4800 },
+            { date: "2023-03-12", item: "Oil Painting", amount: 3500 },
+            { date: "2023-04-20", item: "Persian Carpet", amount: 4200 },
+            { date: "2023-05-15", item: "Bronze Statue", amount: 3600 },
+            { date: "2023-06-18", item: "Chandelier", amount: 4600 },
+            { date: "2023-07-22", item: "Silverware Set", amount: 3300 },
+            { date: "2023-08-10", item: "Antique Clock", amount: 3900 },
+            { date: "2023-09-05", item: "Art Deco Wristwatch", amount: 5400 },
+            { date: "2023-10-20", item: "Antique Secretary Desk", amount: 4200 },
+            { date: "2023-11-15", item: "Crystal Bowl", amount: 3800 },
+            { date: "2023-12-05", item: "Porcelain Figurine", amount: 3000 },
+            { date: "2023-12-20", item: "Classic Painting", amount: 4500 },
+            { date: "2024-01-10", item: "Jewelry Box", amount: 2700 },
+            { date: "2024-02-05", item: "Bronze Figure", amount: 3600 },
+            { date: "2024-03-15", item: "Antique Chest", amount: 4000 },
+            { date: "2024-04-01", item: "Tea Service", amount: 2400 },
+            { date: "2024-05-10", item: "Ming Dynasty Vase", amount: 7200 },
+            { date: "2024-06-20", item: "Exclusive Painting", amount: 8800 },
+            { date: "2024-07-05", item: "Antique Mirror", amount: 2500 }
+        ],
+
+        "Max Schmidt": [
+            { date: "2023-01-10", item: "Classic Wardrobe", amount: 4200 },
+            { date: "2023-01-25", item: "Antique Chandelier", amount: 5100 },
+            { date: "2023-02-15", item: "Oil Painting - Landscape", amount: 7500 },
+            { date: "2023-03-10", item: "Antique Dresser", amount: 3800 },
+            { date: "2023-03-28", item: "Bronze Statue", amount: 4800 },
+            { date: "2023-04-15", item: "Baroque Secretary", amount: 5200 },
+            { date: "2023-05-05", item: "Ming Dynasty Vase", amount: 9200 },
+            { date: "2023-06-02", item: "Art Nouveau Mirror", amount: 4000 },
+            { date: "2023-07-20", item: "Silverware Set", amount: 4500 },
+            { date: "2023-08-12", item: "Antique Wall Clock", amount: 3700 },
+            { date: "2023-08-25", item: "Crystal Bowl", amount: 2600 },
+            { date: "2023-09-10", item: "Art Deco Chandelier", amount: 5900 },
+            { date: "2023-09-30", item: "Golden Pocket Watch", amount: 8800 },
+            { date: "2023-10-20", item: "Oriental Carpet", amount: 6400 },
+            { date: "2023-11-05", item: "Painting - Still Life", amount: 7500 },
+            { date: "2023-11-25", item: "Porcelain Figurine", amount: 4300 },
+            { date: "2023-12-10", item: "Bronze Figure", amount: 5200 },
+            { date: "2023-12-30", item: "Antique Wooden Chair", amount: 2900 },
+            { date: "2024-01-15", item: "Silver Tea Service", amount: 4100 },
+            { date: "2024-02-05", item: "Renaissance Bookshelf", amount: 6200 }
+        ],
+
+        "Lisa Weber": [
+            { date: "2023-01-05", item: "Antique Chest", amount: 4200 },
+            { date: "2023-01-20", item: "Painting - Sunset", amount: 8900 },
+            { date: "2023-02-12", item: "Porcelain Figurine - Dancer", amount: 3200 },
+            { date: "2023-03-01", item: "Chandelier - Art Nouveau", amount: 5700 },
+            { date: "2023-03-25", item: "Bronze Statue - Eagle", amount: 6100 },
+            { date: "2023-04-18", item: "Oriental Carpet - Persian", amount: 7300 },
+            { date: "2023-05-10", item: "Baroque Secretary", amount: 5200 },
+            { date: "2023-06-01", item: "Antique Wall Clock", amount: 4700 },
+            { date: "2023-06-15", item: "Silverware Set", amount: 4500 },
+            { date: "2023-07-02", item: "Painting - Still Life", amount: 8800 },
+            { date: "2023-07-30", item: "Crystal Bowl", amount: 3100 },
+            { date: "2023-08-12", item: "Tea Service - Rose Pattern", amount: 3500 },
+            { date: "2023-09-05", item: "Vase from the Qing Dynasty", amount: 9800 },
+            { date: "2023-09-20", item: "Wooden Chair - Baroque Style", amount: 2700 },
+            { date: "2023-10-10", item: "Bronze Figure - Dancer", amount: 6100 },
+            { date: "2023-11-05", item: "Art Deco Jewelry Box", amount: 4300 },
+            { date: "2023-12-01", item: "Painting - Autumn Landscape", amount: 8900 },
+            { date: "2023-12-15", item: "Antique Bookshelf", amount: 7500 },
+            { date: "2024-01-10", item: "Art Nouveau Mirror", amount: 7600 }
+        ],
+
+        "Tom Meier": [
+            { date: "2023-01-12", item: "Antique Desk", amount: 6200 },
+            { date: "2023-01-28", item: "Baroque Dresser", amount: 4500 },
+            { date: "2023-02-15", item: "Painting - Seascape", amount: 8400 },
+            { date: "2023-03-01", item: "Antique Carpet - Persia", amount: 7700 },
+            { date: "2023-03-20", item: "Bronze Statue - Lion", amount: 6100 },
+            { date: "2023-04-05", item: "Antique Wall Clock", amount: 4800 },
+            { date: "2023-05-01", item: "Crystal Decanter", amount: 2900 },
+            { date: "2023-05-25", item: "Oil Painting - Forest Landscape", amount: 9300 },
+            { date: "2023-06-10", item: "Art Deco Chandelier", amount: 5600 },
+            { date: "2023-06-22", item: "Silverware Set", amount: 4200 },
+            { date: "2023-07-15", item: "Porcelain Figurine - Dancer", amount: 3300 },
+            { date: "2023-08-01", item: "Jewelry Box - Mahogany", amount: 3700 },
+            { date: "2023-08-20", item: "Ming Dynasty Vase", amount: 9100 },
+            { date: "2023-09-10", item: "Antique Bookshelf", amount: 7500 },
+            { date: "2023-09-25", item: "Painting - Mountain Landscape", amount: 8700 },
+            { date: "2023-10-05", item: "Bronze Figure - Eagle", amount: 6800 },
+            { date: "2023-11-01", item: "Antique Chest", amount: 4900 },
+            { date: "2023-11-20", item: "Tea Service - Floral", amount: 3200 },
+            { date: "2023-12-10", item: "Art Nouveau Mirror", amount: 7600 }
+        ],
+
+        "Sophie Krause": [
+            { date: "2023-01-10", item: "Oil Painting - Spring Landscape", amount: 8500 },
+            { date: "2023-02-05", item: "Antique Wall Clock", amount: 4700 },
+            { date: "2023-02-20", item: "Art Nouveau Vase", amount: 7200 },
+            { date: "2023-03-12", item: "Crystal Bowl", amount: 3500 },
+            { date: "2023-03-28", item: "Art Deco Wristwatch", amount: 8800 },
+            { date: "2023-04-15", item: "Antique Chest", amount: 4900 },
+            { date: "2023-05-05", item: "Baroque Dresser", amount: 6700 },
+            { date: "2023-05-22", item: "Bronze Figure - Dancer", amount: 5300 },
+            { date: "2023-06-10", item: "Tea Service - Art Nouveau", amount: 3400 },
+            { date: "2023-06-25", item: "Painting - Still Life with Flowers", amount: 8900 },
+            { date: "2023-07-05", item: "Antique Secretary Desk", amount: 7200 },
+            { date: "2023-08-01", item: "Bronze Statue - Lion", amount: 6100 },
+            { date: "2023-08-20", item: "Oriental Carpet - Persian", amount: 7900 },
+            { date: "2023-09-10", item: "Porcelain Figurine - Dancer", amount: 3200 },
+            { date: "2023-10-05", item: "Chandelier - Baroque Style", amount: 6200 },
+            { date: "2023-10-28", item: "Antique Mirror", amount: 3800 },
+            { date: "2023-11-15", item: "Silverware Set", amount: 4500 },
+            { date: "2023-12-05", item: "Renaissance Bookshelf", amount: 7400 }
+        ],
+
+        "Peter Wagner": [
+            { date: "2023-01-15", item: "Antique Chest", amount: 4900 },
+            { date: "2023-02-01", item: "Painting - Sunset", amount: 8800 },
+            { date: "2023-02-20", item: "Bronze Statue - Horse", amount: 5400 },
+            { date: "2023-03-10", item: "Crystal Decanter", amount: 3200 },
+            { date: "2023-03-25", item: "Baroque Dresser", amount: 6700 },
+            { date: "2023-04-12", item: "Antique Mirror", amount: 3600 },
+            { date: "2023-05-05", item: "Oil Painting - Autumn Landscape", amount: 7500 },
+            { date: "2023-05-20", item: "Chandelier - Art Nouveau", amount: 6200 },
+            { date: "2023-06-08", item: "Silverware Set", amount: 4700 },
+            { date: "2023-06-25", item: "Art Nouveau Vase", amount: 7300 },
+            { date: "2023-07-12", item: "Porcelain Figurine - Dancer", amount: 3200 },
+            { date: "2023-08-01", item: "Antique Secretary Desk", amount: 5200 },
+            { date: "2023-08-15", item: "Tea Service - Floral", amount: 3400 },
+            { date: "2023-09-10", item: "Renaissance Bookshelf", amount: 7400 },
+            { date: "2023-09-30", item: "Art Deco Chandelier", amount: 5400 },
+            { date: "2023-10-15", item: "Oriental Carpet - Persian", amount: 8900 },
+            { date: "2023-11-01", item: "Bronze Figure - Dancer", amount: 6100 }
+        ],
+
+        "Clara Lehmann": [
+            { date: "2023-01-08", item: "Oil Painting - Mediterranean Landscape", amount: 7600 },
+            { date: "2023-01-25", item: "Antique Wall Clock", amount: 4800 },
+            { date: "2023-02-10", item: "Bronze Statue - Horse", amount: 5300 },
+            { date: "2023-02-28", item: "Art Deco Jewelry Box", amount: 3200 },
+            { date: "2023-03-15", item: "Crystal Bowl", amount: 3500 },
+            { date: "2023-03-30", item: "Antique Secretary Desk", amount: 7200 },
+            { date: "2023-04-18", item: "Oriental Carpet - Persian", amount: 8100 },
+            { date: "2023-05-08", item: "Tea Service - Blue and White", amount: 3100 },
+            { date: "2023-05-25", item: "Baroque Dresser", amount: 6900 },
+            { date: "2023-06-12", item: "Painting - Still Life with Flowers", amount: 7800 },
+            { date: "2023-06-28", item: "Silverware Set", amount: 4600 },
+            { date: "2023-07-10", item: "Chandelier - Art Nouveau", amount: 5900 },
+            { date: "2023-07-30", item: "Antique Mirror", amount: 3800 },
+            { date: "2023-08-15", item: "Porcelain Figurine - Dancer", amount: 3200 },
+            { date: "2023-09-05", item: "Bronze Figure - Eagle", amount: 6100 },
+            { date: "2023-10-01", item: "Renaissance Bookshelf", amount: 7500 },
+            { date: "2023-10-20", item: "Art Nouveau Vase", amount: 7200 }
+        ],
+
+        "Maria Fischer": [
+            { date: "2023-01-12", item: "Oil Painting - Winter Landscape", amount: 7200 },
+            { date: "2023-02-05", item: "Antique Chest", amount: 4800 },
+            { date: "2023-02-22", item: "Crystal Bowl", amount: 3200 },
+            { date: "2023-03-10", item: "Art Nouveau Mirror", amount: 5400 },
+            { date: "2023-03-30", item: "Silverware Set", amount: 4700 },
+            { date: "2023-04-18", item: "Ming Dynasty Vase", amount: 8100 },
+            { date: "2023-05-05", item: "Baroque Dresser", amount: 6900 },
+            { date: "2023-06-12", item: "Tea Service - Blue and White", amount: 3100 },
+            { date: "2023-06-28", item: "Porcelain Figurine - Dancer", amount: 3200 },
+            { date: "2023-07-10", item: "Bronze Figure - Eagle", amount: 5900 },
+            { date: "2023-07-30", item: "Painting - Still Life with Flowers", amount: 7800 },
+            { date: "2023-08-15", item: "Antique Secretary Desk", amount: 7200 },
+            { date: "2023-09-05", item: "Renaissance Bookshelf", amount: 7500 },
+            { date: "2023-10-01", item: "Antique Wall Clock", amount: 5200 },
+            { date: "2023-10-20", item: "Chandelier - Art Nouveau", amount: 6800 },
+            { date: "2023-11-05", item: "Jewelry Box - Art Deco", amount: 3300 }
+        ],
+
+        "Hans Becker": [
+            { date: "2023-01-08", item: "Oil Painting - Seascape", amount: 8200 },
+            { date: "2023-01-22", item: "Baroque Dresser", amount: 7200 },
+            { date: "2023-02-10", item: "Crystal Bowl", amount: 3600 },
+            { date: "2023-03-05", item: "Bronze Figure - Lion", amount: 5900 },
+            { date: "2023-03-25", item: "Antique Mirror", amount: 4200 },
+            { date: "2023-04-12", item: "Porcelain Figurine - Dancer", amount: 3100 },
+            { date: "2023-05-08", item: "Silverware Set", amount: 4900 },
+            { date: "2023-06-15", item: "Painting - Sunset", amount: 8800 },
+            { date: "2023-07-01", item: "Antique Secretary Desk", amount: 7200 },
+            { date: "2023-07-25", item: "Oriental Carpet - Persian", amount: 9100 },
+            { date: "2023-08-18", item: "Tea Service - Floral", amount: 3600 },
+            { date: "2023-09-05", item: "Ming Dynasty Vase", amount: 8400 },
+            { date: "2023-10-10", item: "Antique Wall Clock", amount: 5700 },
+            { date: "2023-11-15", item: "Art Nouveau Chandelier", amount: 6500 },
+            { date: "2023-12-01", item: "Jewelry Box - Art Deco", amount: 4300 }
+        ],
+
+        "Julia Braun": [
+            { date: "2023-01-15", item: "Oil Painting - Impressionist Landscape", amount: 7500 },
+            { date: "2023-02-02", item: "Baroque Dresser", amount: 7100 },
+            { date: "2023-02-20", item: "Crystal Bowl", amount: 3400 },
+            { date: "2023-03-08", item: "Bronze Figure - Dancer", amount: 6100 },
+            { date: "2023-04-01", item: "Antique Mirror", amount: 4000 },
+            { date: "2023-04-22", item: "Silverware Set", amount: 5200 },
+            { date: "2023-05-12", item: "Porcelain Figurine - Angel", amount: 3700 },
+            { date: "2023-06-05", item: "Antique Secretary Desk", amount: 6900 },
+            { date: "2023-07-01", item: "Art Nouveau Vase", amount: 5800 },
+            { date: "2023-07-25", item: "Tea Service - Royal Blue", amount: 4100 },
+            { date: "2023-08-15", item: "Oriental Carpet - Persian", amount: 8700 },
+            { date: "2023-09-10", item: "Ming Dynasty Vase", amount: 9100 },
+            { date: "2023-10-05", item: "Antique Wall Clock", amount: 5600 },
+            { date: "2023-11-15", item: "Chandelier - Art Nouveau", amount: 7200 },
+            { date: "2023-12-01", item: "Jewelry Box - Art Deco", amount: 3900 }
+        ],
+
+        "Frank Müller": [
+            { date: "2023-01-10", item: "Oil Painting - Sunset at Sea", amount: 7800 },
+            { date: "2023-02-05", item: "Antique Secretary Desk", amount: 6700 },
+            { date: "2023-02-25", item: "Bronze Statue - Eagle", amount: 5300 },
+            { date: "2023-03-15", item: "Crystal Bowl", amount: 3200 },
+            { date: "2023-04-05", item: "Silverware Set", amount: 5100 },
+            { date: "2023-04-28", item: "Qing Dynasty Vase", amount: 9200 },
+            { date: "2023-05-20", item: "Baroque Dresser", amount: 6800 },
+            { date: "2023-06-12", item: "Porcelain Figurine - Dancer", amount: 3400 },
+            { date: "2023-07-01", item: "Tea Service - Floral", amount: 4200 },
+            { date: "2023-08-05", item: "Oriental Carpet - Persian", amount: 8100 },
+            { date: "2023-09-10", item: "Antique Wall Clock", amount: 5500 },
+            { date: "2023-10-01", item: "Art Nouveau Chandelier", amount: 7200 },
+            { date: "2023-11-15", item: "Jewelry Box - Mahogany", amount: 3800 },
+            { date: "2023-12-05", item: "Renaissance Bookshelf", amount: 7500 }
+        ],
+
+        "Laura Klein": [
+            { date: "2023-01-12", item: "Oil Painting - Mountain Landscape", amount: 7400 },
+            { date: "2023-02-08", item: "Antique Secretary Desk", amount: 6800 },
+            { date: "2023-02-22", item: "Bronze Figure - Dancer", amount: 5200 },
+            { date: "2023-03-10", item: "Crystal Bowl", amount: 3100 },
+            { date: "2023-04-01", item: "Silverware Set", amount: 5000 },
+            { date: "2023-04-18", item: "Ming Dynasty Vase", amount: 8800 },
+            { date: "2023-05-12", item: "Baroque Dresser", amount: 6700 },
+            { date: "2023-06-05", item: "Porcelain Figurine - Dancer", amount: 3200 },
+            { date: "2023-07-10", item: "Tea Service - Royal Blue", amount: 4000 },
+            { date: "2023-08-01", item: "Oriental Carpet - Persian", amount: 8500 },
+            { date: "2023-09-05", item: "Antique Wall Clock", amount: 5400 },
+            { date: "2023-10-12", item: "Art Nouveau Chandelier", amount: 7100 },
+            { date: "2023-11-08", item: "Jewelry Box - Art Deco", amount: 3700 },
+            { date: "2023-12-03", item: "Renaissance Bookshelf", amount: 7300 }
+        ],
+
+        "Martin Koch": [
+            { date: "2023-01-05", item: "Oil Painting - Alpine Panorama", amount: 7200 },
+            { date: "2023-02-02", item: "Antique Secretary Desk", amount: 6400 },
+            { date: "2023-02-28", item: "Bronze Figure - Lion", amount: 5100 },
+            { date: "2023-03-15", item: "Crystal Bowl", amount: 3000 },
+            { date: "2023-04-10", item: "Silverware Set", amount: 4700 },
+            { date: "2023-05-05", item: "Qing Dynasty Vase", amount: 8900 },
+            { date: "2023-06-01", item: "Baroque Dresser", amount: 6500 },
+            { date: "2023-06-20", item: "Porcelain Figurine - Dancer", amount: 3100 },
+            { date: "2023-07-12", item: "Tea Service - Classic White", amount: 3800 },
+            { date: "2023-08-10", item: "Oriental Carpet - Persian", amount: 8200 },
+            { date: "2023-09-18", item: "Antique Wall Clock", amount: 5300 },
+            { date: "2023-10-25", item: "Art Nouveau Chandelier", amount: 6900 }
+        ],
+        "Sandra Berger": [
+            { date: "2023-01-12", item: "Oil Painting - Forest Landscape", amount: 6800 },
+            { date: "2023-02-08", item: "Antique Chest", amount: 5600 },
+            { date: "2023-03-05", item: "Bronze Statue - Dancer", amount: 4700 },
+            { date: "2023-04-01", item: "Crystal Bowl", amount: 3100 },
+            { date: "2023-05-10", item: "Silverware Set", amount: 4900 },
+            { date: "2023-06-05", item: "Qing Dynasty Vase", amount: 7200 },
+            { date: "2023-06-25", item: "Baroque Dresser", amount: 6100 },
+            { date: "2023-07-15", item: "Porcelain Figurine - Dancer", amount: 3400 },
+            { date: "2023-08-01", item: "Tea Service - Gold Rim", amount: 3800 },
+            { date: "2023-09-12", item: "Antique Wall Clock", amount: 5100 },
+            { date: "2023-10-05", item: "Jewelry Box - Art Nouveau", amount: 4300 }
+        ],
+
+        "Patrick Kurz": [
+            { date: "2023-01-18", item: "Oil Painting - Harbor View", amount: 7200 },
+            { date: "2023-02-12", item: "Antique Secretary Desk", amount: 6300 },
+            { date: "2023-03-01", item: "Bronze Figure - Hunting Dog", amount: 5200 },
+            { date: "2023-03-22", item: "Crystal Decanter", amount: 3100 },
+            { date: "2023-04-08", item: "Silverware Set", amount: 4900 },
+            { date: "2023-05-15", item: "Qing Dynasty Vase", amount: 7000 },
+            { date: "2023-06-05", item: "Baroque Dresser", amount: 6400 },
+            { date: "2023-06-28", item: "Porcelain Figurine - Dancer", amount: 3500 },
+            { date: "2023-07-10", item: "Tea Service - Royal Design", amount: 4200 },
+            { date: "2023-08-05", item: "Antique Wall Clock", amount: 5200 },
+            { date: "2023-09-18", item: "Jewelry Box - Art Deco", amount: 4100 }
+        ],
+        "Nina Schuster": [
+            { date: "2023-01-10", item: "Oil Painting - Village in Winter", amount: 6900 },
+            { date: "2023-02-08", item: "Antique Secretary Desk", amount: 6100 },
+            { date: "2023-03-03", item: "Bronze Figure - Dancer", amount: 4900 },
+            { date: "2023-03-22", item: "Crystal Bowl", amount: 3100 },
+            { date: "2023-04-05", item: "Silverware Set", amount: 4600 },
+            { date: "2023-05-10", item: "Qing Dynasty Vase", amount: 7200 },
+            { date: "2023-06-05", item: "Baroque Dresser", amount: 5800 },
+            { date: "2023-07-02", item: "Porcelain Figurine - Dancer", amount: 3200 },
+            { date: "2023-07-25", item: "Tea Service - Hand-Painted", amount: 3500 },
+            { date: "2023-08-15", item: "Antique Wall Clock", amount: 5100 },
+            { date: "2023-09-10", item: "Jewelry Box - Mahogany", amount: 4200 }
+        ],
+
+        "Jan Hoffmann": [
+            { date: "2023-01-15", item: "Oil Painting - City View", amount: 7200 },
+            { date: "2023-02-10", item: "Antique Secretary Desk", amount: 6400 },
+            { date: "2023-03-05", item: "Bronze Figure - Horse", amount: 5200 },
+            { date: "2023-04-02", item: "Crystal Bowl", amount: 3100 },
+            { date: "2023-05-08", item: "Silverware Set", amount: 4800 },
+            { date: "2023-06-12", item: "Qing Dynasty Vase", amount: 7300 },
+            { date: "2023-07-01", item: "Baroque Dresser", amount: 6100 },
+            { date: "2023-08-10", item: "Porcelain Figurine - Dancer", amount: 3200 },
+            { date: "2023-09-05", item: "Tea Service - Blue and White", amount: 3500 },
+            { date: "2023-10-15", item: "Antique Wall Clock", amount: 5100 }
+        ],
+        "Theresa Lang": [
+            { date: "2023-01-20", item: "Oil Painting - Flower Still Life", amount: 7100 },
+            { date: "2023-02-12", item: "Antique Secretary Desk", amount: 6300 },
+            { date: "2023-03-08", item: "Bronze Statue - Dancer", amount: 5200 },
+            { date: "2023-04-01", item: "Crystal Decanter", amount: 3000 },
+            { date: "2023-05-15", item: "Silverware Set", amount: 4800 },
+            { date: "2023-06-05", item: "Qing Dynasty Vase", amount: 7200 },
+            { date: "2023-07-10", item: "Baroque Dresser", amount: 6200 },
+            { date: "2023-08-01", item: "Porcelain Figurine - Dancer", amount: 3400 },
+            { date: "2023-09-05", item: "Tea Service - Hand-Painted", amount: 3700 },
+            { date: "2023-10-18", item: "Antique Wall Clock", amount: 5300 }
+        ],
+
+        "Fabian Jung": [
+            { date: "2023-01-12", item: "Oil Painting - Mountain Panorama", amount: 6200 },
+            { date: "2023-02-08", item: "Antique Secretary Desk", amount: 5900 },
+            { date: "2023-03-03", item: "Bronze Statue - Lion", amount: 4800 },
+            { date: "2023-04-05", item: "Crystal Bowl", amount: 3100 },
+            { date: "2023-05-15", item: "Silverware Set", amount: 4500 },
+            { date: "2023-06-05", item: "Qing Dynasty Vase", amount: 6900 },
+            { date: "2023-07-02", item: "Baroque Dresser", amount: 5400 },
+            { date: "2023-08-01", item: "Porcelain Figurine - Dancer", amount: 3200 },
+            { date: "2023-09-05", item: "Tea Service - Floral", amount: 3500 },
+            { date: "2023-10-15", item: "Antique Wall Clock", amount: 5000 }
+        ],
+        "Sabine Voigt": [
+            { date: "2023-01-08", item: "Oil Painting - Coastal Landscape", amount: 5800 },
+            { date: "2023-02-02", item: "Antique Secretary Desk", amount: 5700 },
+            { date: "2023-03-05", item: "Bronze Statue - Eagle", amount: 4500 },
+            { date: "2023-04-10", item: "Crystal Bowl", amount: 3000 },
+            { date: "2023-05-08", item: "Silverware Set", amount: 4200 },
+            { date: "2023-06-15", item: "Ming Dynasty Vase", amount: 6700 },
+            { date: "2023-07-01", item: "Baroque Dresser", amount: 5200 },
+            { date: "2023-08-12", item: "Porcelain Figurine - Dancer", amount: 3100 },
+            { date: "2023-09-05", item: "Tea Service - Hand-Painted", amount: 3400 },
+            { date: "2023-10-10", item: "Antique Wall Clock", amount: 4900 }
+        ]
+
+    };
+
+
+    const preferencesData = {
+        "Anna Müller": [30, 25, 20, 25],
+        "Max Schmidt": [40, 30, 15, 15],
+        "Lisa Weber": [35, 30, 20, 15],
+        "Tom Meier": [30, 35, 20, 15],
+        "Sophie Krause": [35, 30, 20, 15],
+        "Peter Wagner": [30, 35, 20, 15],
+        "Clara Lehmann": [28, 32, 22, 18],
+        "Maria Fischer": [30, 30, 25, 15],
+        "Hans Becker": [32, 28, 22, 18],
+        "Julia Braun": [30, 30, 25, 15],
+        "Frank Müller": [28, 32, 20, 20],
+        "Laura Klein": [30, 30, 25, 15],
+        "Martin Koch": [28, 34, 22, 16],
+        "Sandra Berger": [26, 32, 24, 18],
+        "Patrick Kurz": [28, 34, 20, 18],
+        "Nina Schuster": [30, 32, 20, 18],
+        "Jan Hoffmann": [28, 30, 22, 20],
+        "Theresa Lang": [30, 28, 25, 17],
+        "Fabian Jung": [28, 30, 22, 20],
+        "Sabine Voigt": [30, 28, 22, 20]
+    };
+
+    const categories = ["Paintings", "Furniture", "Jewelry", "Miscellaneous"];
+
+    const customerSelect = document.getElementById('customerSelect');
+    Object.keys(purchaseHistory).forEach(customer => {
+        const option = document.createElement('option');
+        option.value = customer;
+        option.textContent = customer;
+        customerSelect.appendChild(option);
+    });
+
+    function updatePurchaseHistory() {
+        const selectedCustomer = customerSelect.value;
+        const historyBody = document.getElementById('purchaseHistoryTableBody');
+        historyBody.innerHTML = '';
+
+        (purchaseHistory[selectedCustomer] || []).forEach(entry => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${entry.date}</td><td>${entry.item}</td><td>${entry.amount.toLocaleString()} €</td>`;
+            historyBody.appendChild(row);
+        });
+
+        updatePreferencesChart(selectedCustomer);
+    }
+
+    const preferencesChart = new Chart(document.getElementById('preferencesChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: categories,
+            datasets: [{
+                data: [0, 0, 0, 0],
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FF7043']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    function updatePreferencesChart(customer) {
+        const data = preferencesData[customer] || [0, 0, 0, 0];
+        preferencesChart.data.datasets[0].data = data;
+        preferencesChart.update();
+    }
+
+    function generateOffers() {
+        const selectedCustomer = customerSelect.value;
+        const offersOutput = document.getElementById('offersOutput');
+
+        const offers = [
+            "10% Discount on Paintings",
+            "Free Shipping for Furniture",
+            "Exclusive Invitation to Jewelry Auction",
+            "Discount on Antique Clocks"
+        ];
+
+
+        const randomOffer = offers[Math.floor(Math.random() * offers.length)];
+        offersOutput.innerHTML = `<p>Angebot für ${selectedCustomer}: ${randomOffer}</p>`;
+    }
+
+    const themeToggle = document.getElementById("theme-toggle");
+    themeToggle.addEventListener("click", toggleTheme);
+    let darkMode = false;
+
+    function toggleTheme() {
+        if (!darkMode) {
+            document.body.style.background = "#000000";
+            document.querySelector(".header").style.background = "#0844A4";
+            document.querySelector(".header h1").style.color = "#FFFFFF";
+
+            document.querySelectorAll("th").forEach(th => {
+                th.style.backgroundColor = "#0844A4";
+                th.style.color = "#FFFFFF";
+            });
+            document.querySelectorAll("td").forEach(td => {
+                td.style.backgroundColor = "#0C59CF";
+                td.style.color = "#FFFFFF";
+            });
+
+            document.querySelector(".container").style.backgroundColor = "#0C59CF";
+            document.querySelector(".container").style.color = "#FFFFFF";
+
+            document.querySelector("#customerSelect").style.backgroundColor = "#0844A4";
+            document.querySelector("#customerSelect").style.color = "#FFFFFF";
+            document.querySelector("#customerSelect").style.borderColor = "#FFFFFF";
+            document.getElementById("particles-js").style.background =
+                "linear-gradient(135deg, #0844A4 0%, #75A9F9 100%)";
+            preferencesChart.options.plugins.legend.labels.color = "#FFFFFF";
+            preferencesChart.options.plugins.legend.title.color = "#FFFFFF";
+            preferencesChart.update();
+
+            document.querySelectorAll(".navigate-button").forEach(btn => {
+                btn.style.backgroundColor = "#0844A4";
+                btn.style.color = "#FFFFFF";
+                btn.style.borderColor = "#0C59CF";
+
+                btn.onmouseover = () => {
+                    btn.style.backgroundColor = "#0C59CF";
+                };
+                btn.onmouseout = () => {
+                    btn.style.backgroundColor = "#0844A4";
+                };
+            });
+
+            themeToggle.textContent = "☀️";
+            themeToggle.style.backgroundColor = "#0C59CF";
+            themeToggle.style.color = "#FFFFFF";
+            themeToggle.onmouseover = () => themeToggle.style.backgroundColor = "#0844A4";
+            themeToggle.onmouseout = () => themeToggle.style.backgroundColor = "#0C59CF";
+        } else {
+            document.body.style.background = "linear-gradient(to bottom, #f9fafb, #e6e6e6)";
+            document.querySelector(".header").style.background = "#FEC63D";
+            document.querySelector(".header h1").style.color = "white";
+
+            document.querySelectorAll("th").forEach(th => {
+                th.style.backgroundColor = "#FEC63D";
+                th.style.color = "#FFFFFF";
+            });
+            document.querySelectorAll("td").forEach(td => {
+                td.style.backgroundColor = "#FFFFFF";
+                td.style.color = "#000000";
+            });
+            document.getElementById("particles-js").style.background =
+                "linear-gradient(135deg, #f5f7fa 0%, #FEC63D 100%)";
+            document.querySelector(".container").style.backgroundColor = "#FFFFFF";
+            document.querySelector(".container").style.color = "#000000";
+
+            document.querySelector("#customerSelect").style.backgroundColor = "#FFFFFF";
+            document.querySelector("#customerSelect").style.color = "#000000";
+            document.querySelector("#customerSelect").style.borderColor = "#ddd";
+
+            preferencesChart.options.plugins.legend.labels.color = "#000000";
+            preferencesChart.options.plugins.legend.title.color = "#000000";
+            preferencesChart.update();
+
+            document.querySelectorAll(".navigate-button").forEach(btn => {
+                btn.style.backgroundColor = "#FEC63D";
+                btn.style.color = "#FFFFFF";
+                btn.style.borderColor = "none";
+
+                btn.onmouseover = () => {
+                    btn.style.backgroundColor = "#FFD783";
+                };
+                btn.onmouseout = () => {
+                    btn.style.backgroundColor = "#FEC63D";
+                };
+            });
+
+            themeToggle.textContent = "🌙";
+            themeToggle.style.backgroundColor = "#FFFFFF";
+            themeToggle.style.color = "#333";
+            themeToggle.onmouseover = () => themeToggle.style.backgroundColor = "#E0A800";
+            themeToggle.onmouseout = () => themeToggle.style.backgroundColor = "#FFFFFF";
+        }
+        darkMode = !darkMode;
+    }
+    updatePurchaseHistory();
+
+    particlesJS("particles-js", {
+        particles: {
+            number: {
+                value: 100,
+                density: {
+                    enable: true,
+                    value_area: 800
+                }
+            },
+            color: {
+                value: "#ffffff"
+            },
+            shape: {
+                type: "circle",
+                stroke: {
+                    width: 0
+                }
+            },
+            opacity: {
+                value: 0.5,
+                random: false
+            },
+            size: {
+                value: 3,
+                random: true
+            },
+            line_linked: {
+                enable: true,
+                distance: 150,
+                color: "#ffffff",
+                opacity: 0.4,
+                width: 1
+            },
+            move: {
+                enable: true,
+                speed: 2,
+                direction: "none",
+                random: false,
+                straight: false,
+                out_mode: "out",
+                bounce: false
+            }
+        },
+        interactivity: {
+            detect_on: "canvas",
+            events: {
+                onhover: {
+                    enable: true,
+                    mode: "grab"
+                },
+                onclick: {
+                    enable: true,
+                    mode: "push"
+                },
+                resize: true
+            }
+        },
+        retina_detect: true
+    });
+
+</script>
+
+</body>
+</html>

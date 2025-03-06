@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auction Statistics</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .chart {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px;
+        }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            background: lightgrey;
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 12px;
+            display: none;
+            pointer-events: none;
+        }
+
+        #controls {
+            margin: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        #controls select, #controls button, #controls input {
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        #controls button:hover {
+            background-color: #f0f0f0;
+        }
+        #data-overview {
+            margin-top: 20px;
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #data-overview th, #data-overview td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        #data-overview th {
+            background-color: #007bff;
+            color: white;
+        }
+        #data-overview tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        #data-overview tr:hover {
+            background-color: #f1f1f1;
+        }
+        #theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #FFFFFF;
+            color: #333;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 16px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #theme-toggle:hover {
+            background-color: #E0A800;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+    </style>
+</head>
+<body>
+<div id="controls"><select id="chart-type-selector" onchange="updateChartType(this.value)">
+    <option value="bar">Bar Chart</option>
+    <option value="pie">Pie Chart</option>
+    <option value="heatmap">Heatmap</option>
+    <option value="line">Line Chart</option>
+</select>
+    <select id="metric-selector" onchange="updateMetric(this.value)">
+        <option value="sales" selected>By Number of Sales</option>
+        <option value="revenue">By Revenue</option>
+    </select>
+    <select id="view-selector" onchange="updateView(this.value)">
+        <option value="date" selected>By Date</option>
+        <option value="category">By Category</option>
+        <option value="state">By State</option>
+    </select>
+    <select id="year-selector" style="display: none;" onchange="updateYear(this.value)">
+        <option value="all" selected>Overall</option>
+        <option value="2020">2020</option>
+        <option value="2021">2021</option>
+        <option value="2022">2022</option>
+        <option value="2023">2023</option>
+        <option value="2024">2024</option>
+    </select>
+    <select id="action-selector" onchange="handleActionChange(this.value)">
+        <option value="">Select Action...</option>
+        <option value="sort-asc">Sort by Lowest</option>
+        <option value="sort-desc">Sort by Highest</option>
+        <option value="filter">Show all over 10</option>
+        <option value="reset">Reset Data</option>
+        <option value="highlight-top">Highlight Top 3</option>
+        <option value="show-average">Show Average</option>
+        <option value="sort-category">Sort by Category</option>
+    </select>
+    <select id="interval-selector" onchange="updateChart()">
+        <option value="day">Daily</option>
+        <option value="week">Weekly</option>
+        <option value="month">Monthly</option>
+        <option value="year">Yearly</option>
+    </select>
+    <div id="date-filter">
+        <input type="date" id="start-date" placeholder="Start Date">
+        <input type="date" id="end-date" placeholder="End Date">
+        <button onclick="filterByDate()">Filter</button>
+    </div>
+    <button id="compare-button" onclick="openCompareMode()">Compare</button>
+    <button id="map-button" onclick="openMapMode()">Map View</button>
+    <select id="export-options">
+        <option value="">Export...</option>
+        <option value="print">Print Charts</option>
+        <option value="csv">Export Data as CSV</option>
+        <option value="pdf">Export Data as PDF</option>
+    </select>
+    <button id="theme-toggle">🌙</button>
+</div>
+
+<div id="average-sales" style="display: none; text-align: center; margin: 20px; font-size: 18px;">
+    <strong>Average:</strong> <span id="average-sales-value">0</span>
+</div>
+
+<div id="sales-chart" class="chart"></div>
+<div id="tooltip" class="tooltip"></div>
+<table id="data-overview">
+    <thead>
+    <tr>
+        <th>Date</th>
+        <th>Category</th>
+        <th>Number of Sales</th>
+        <th>Revenue</th>
+        <th>State</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+    const width = 800;
+    const height = 400;
+    const margin = { top: 20, right: 30, bottom: 50, left: 60 };
+
+    let chartType = 'bar';
+    let currentInterval = "day";
+    let currentMetric = "sales";
+    let currentView = "date";
+    let selectedYear = "all";
+    let aggregatedData = [];
+
+    let dummyData = [
+        { date: "2020-01-05", category: "Art", sales: 5, revenue: 50000, state: "Lower Austria" },
+        { date: "2020-02-10", category: "Antiques", sales: 3, revenue: 32000, state: "Vienna" },
+        { date: "2020-03-15", category: "Art", sales: 10, revenue: 15000, state: "Styria" },
+        { date: "2020-04-20", category: "Jewelry", sales: 7, revenue: 70000, state: "Upper Austria" },
+        { date: "2020-05-01", category: "Art", sales: 12, revenue: 120000, state: "Lower Austria" },
+        { date: "2021-03-10", category: "Jewelry", sales: 15, revenue: 301000, state: "Burgenland" },
+        { date: "2021-04-18", category: "Antiques", sales: 26, revenue: 52500, state: "Tyrol" },
+        { date: "2021-04-22", category: "Art", sales: 18, revenue: 36000, state: "Carinthia" },
+        { date: "2022-05-05", category: "Jewelry", sales: 19, revenue: 38000, state: "Salzburg" },
+        { date: "2022-05-15", category: "Antiques", sales: 12, revenue: 24000, state: "Vorarlberg" },
+        { date: "2022-06-01", category: "Art", sales: 10, revenue: 20000, state: "Styria" },
+        { date: "2023-06-20", category: "Jewelry", sales: 35, revenue: 70000, state: "Upper Austria" },
+        { date: "2023-07-10", category: "Antiques", sales: 23, revenue: 46000, state: "Vienna" },
+        { date: "2023-08-15", category: "Art", sales: 41, revenue: 82000, state: "Burgenland" },
+        { date: "2023-09-20", category: "Jewelry", sales: 28, revenue: 56000, state: "Tyrol" },
+        { date: "2024-01-01", category: "Art", sales: 50, revenue: 100000, state: "Lower Austria" },
+        { date: "2024-06-10", category: "Antiques", sales: 42, revenue: 84000, state: "Carinthia" },
+        { date: "2024-07-15", category: "Jewelry", sales: 48, revenue: 96000, state: "Vorarlberg" },
+        { date: "2024-10-20", category: "Art", sales: 38, revenue: 76000, state: "Salzburg" }
+    ];
+
+    let originalData = [...dummyData];
+
+    function aggregateSales(data, interval) {
+        const grouped = d3.group(data, d => {
+            const date = new Date(d.date);
+            if (interval === "day") return d3.timeFormat("%Y-%m-%d")(date);
+            if (interval === "week") return d3.timeFormat("%Y-W%U")(date);
+            if (interval === "month") return d3.timeFormat("%Y-%m")(date);
+            if (interval === "year") return d3.timeFormat("%Y")(date);
+        });
+
+        return Array.from(grouped, ([key, values]) => ({
+            date: key,
+            value: d3.sum(values, v => v[currentMetric]), // Aggregiere nach der aktuellen Metrik
+            sales: d3.sum(values, v => v.sales), // Behalte Verkäufe bei
+            revenue: d3.sum(values, v => v.revenue), // Behalte Umsatz bei
+            state: Array.from(new Set(values.map(v => v.state))).join(", "), // Kombiniere Bundesländer
+            category: Array.from(new Set(values.map(v => v.category))).join(", ") // Kombiniere Kategorien
+        }));
+    }
+
+    document.getElementById("export-options").addEventListener("change", (event) => {
+        const value = event.target.value;
+        if (value === "print") printPage();
+        else if (value === "csv") exportCSV();
+        else if (value === "pdf") exportPDF();
+        event.target.value = ""; // Setze das Dropdown zurück
+    });
+
+    function aggregateByCategory(data, year) {
+        let filteredData = data;
+
+        if (year !== "all") {
+            filteredData = data.filter(d => new Date(d.date).getFullYear() === parseInt(year));
+        }
+
+        const grouped = d3.group(filteredData, d => d.category);
+
+        return Array.from(grouped, ([category, values]) => ({
+            category,
+            value: d3.sum(values, v => v[currentMetric]), // Summiere Verkäufe oder Umsatz basierend auf der aktuellen Metrik
+            sales: d3.sum(values, v => v.sales),
+            revenue: d3.sum(values, v => v.revenue),
+            states: Array.from(new Set(values.map(v => v.state))).join(", ")
+        }));
+    }
+
+    function aggregateByState(data, year = "all") {
+        let filteredData = data;
+
+        if (year !== "all") {
+            filteredData = data.filter(d => new Date(d.date).getFullYear() === parseInt(year));
+        }
+
+        const grouped = d3.group(filteredData, d => d.state);
+
+        return Array.from(grouped, ([state, values]) => ({
+            state,
+            value: d3.sum(values, v => v[currentMetric]), // Summiere Verkäufe oder Umsatz
+            sales: d3.sum(values, v => v.sales),
+            revenue: d3.sum(values, v => v.revenue),
+            categories: Array.from(new Set(values.map(v => v.category))).join(", ")
+        }));
+    }
+
+    function updateChartAndTableByState() {
+        const aggregatedData = aggregateByState(originalData, selectedYear);
+        renderTable(aggregatedData, "state"); // Tabelle für Bundesländer
+        renderChart(aggregatedData); // Diagramm für Bundesländer
+    }
+
+    function renderChart(data, highlight = false) {
+        d3.select("#sales-chart").select("svg").remove();
+
+        const axisField = currentView === "state" ? "state" : currentView === "category" ? "category" : "date";
+
+        if (chartType === 'bar') {
+            renderBarChart(data.map(d => ({ date: d[axisField], ...d })), highlight);
+        } else if (chartType === 'pie') {
+            renderPieChart(data.map(d => ({ date: d[axisField], ...d }))); // Hier axisField für Konsistenz nutzen
+        } else if (chartType === 'heatmap') {
+            renderHeatmap(data);
+        } else if (chartType === 'line') {
+            renderLineChart(data.map(d => ({ date: d[axisField], ...d }))); // Hier axisField für Konsistenz nutzen
+        }
+    }
+
+    function renderBarChart(data, highlight = false) {
+        const svg = d3.select("#sales-chart")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const x = d3.scaleBand()
+            .domain(data.map(d => d.date))
+            .range([0, width])
+            .padding(0.2);
+
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.value)]) // Verwende die aktuelle Metrik
+            .nice()
+            .range([height, 0]);
+
+        const tooltip = d3.select("#tooltip");
+
+        svg.append("g")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x).tickFormat(d => d))
+            .selectAll("text")
+            .attr("transform", "rotate(-45)")
+            .style("text-anchor", "end");
+
+        svg.append("g").call(d3.axisLeft(y));
+
+        svg.selectAll(".bar")
+            .data(data)
+            .enter()
+            .append("rect")
+            .attr("x", d => x(d.date))
+            .attr("y", d => y(d.value)) // Verwende die aktuelle Metrik
+            .attr("width", x.bandwidth())
+            .attr("height", d => height - y(d.value)) // Verwende die aktuelle Metrik
+            .attr("fill", d => d.highlight ? "orange" : "steelblue")
+            .on("mouseover", function (event, d) {
+                d3.select(this)
+                    .raise()
+                    .transition()
+                    .duration(200)
+                    .attr("fill", d.highlight ? "orange" : "#00008B")
+                    .attr("width", x.bandwidth() * 1.2)
+                    .attr("x", d => x(d.date) - x.bandwidth() * 0.1);
+                tooltip.style("display", "block")
+                    .html(`<strong>Datum:</strong> ${d.date}<br>
+                       <strong>Kategorie:</strong> ${d.category}<br>
+                       <strong>${currentMetric === "sales" ? "Verkäufe" : "Umsatz"}:</strong> ${d.value}`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+            })
+            .on("mousemove", (event) => {
+                tooltip.style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+            })
+            .on("mouseout", function (event, d) {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("fill", d.highlight ? "orange" : "steelblue")
+                    .attr("width", x.bandwidth())
+                    .attr("x", d => x(d.date));
+                tooltip.style("display", "none");
+            });
+    }
+
+    function renderPieChart(data) {
+        const svg = d3.select("#sales-chart")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+        const radius = Math.min(width, height) / 2 - margin.top;
+
+        const pie = d3.pie().value(d => d.value); // Verwende die aktuelle Metrik
+        const arc = d3.arc().innerRadius(0).outerRadius(radius);
+
+        const tooltip = d3.select("#tooltip");
+
+        const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+        svg.selectAll('path')
+            .data(pie(data))
+            .enter()
+            .append('path')
+            .attr('d', arc)
+            .attr('fill', d => d.highlight ? "orange" : color(d.data.date))
+            .on("mouseover", function (event, d) {
+                d3.select(this)
+                    .raise()
+                    .transition()
+                    .duration(200)
+                    .attr('d', d3.arc().innerRadius(0).outerRadius(radius + 20));
+                tooltip.style("display", "block")
+                    .html(`<strong>Datum:</strong> ${d.data.date}<br>
+                       <strong>Kategorie:</strong> ${d.data.category}<br>
+                       <strong>${currentMetric === "sales" ? "Verkäufe" : "Umsatz"}:</strong> ${d.data.value}`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+            })
+            .on("mousemove", (event) => {
+                tooltip.style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+            })
+            .on("mouseout", function (event, d) {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr('d', arc);
+                tooltip.style("display", "none");
+            });
+    }
+
+    function renderHeatmap(data) {
+        const svg = d3.select("#sales-chart")
+            .append("svg")
+            .attr("width", width + 100) // Platz für die Farblegende rechts
+            .attr("height", height + 50); // Platz für Achsenbeschriftungen
+
+        const colorScale = d3.scaleSequential(d3.interpolateBlues)
+            .domain([0, d3.max(data, d => d.value)]); // Verwende die aktuelle Metrik
+
+        const tooltip = d3.select("#tooltip");
+
+        // Spalten und Zeilen definieren
+        const numCols = Math.ceil(Math.sqrt(data.length));
+        const numRows = Math.ceil(data.length / numCols);
+
+        const cellSize = Math.min(width / numCols, (height - 50) / numRows); // Dynamische Zellenberechnung
+
+        // Heatmap-Zellen
+        const cells = svg.selectAll("g.cell")
+            .data(data)
+            .enter()
+            .append("g")
+            .attr("class", "cell")
+            .attr("transform", (d, i) => `translate(${(i % numCols) * cellSize}, ${Math.floor(i / numCols) * cellSize + 20})`); // +20 für Beschriftungen oben
+
+        // Rechtecke der Zellen
+        cells.append("rect")
+            .attr("width", cellSize - 2) // Zellen mit etwas Abstand
+            .attr("height", cellSize - 2)
+            .attr("fill", d => d.highlight ? "orange" : colorScale(d.value)) // Orange für hervorgehobene Felder
+            .on("mouseover", function (event, d) {
+                d3.select(this)
+                    .raise() // Bringt das Rechteck nach vorne
+                    .transition()
+                    .duration(200)
+                    .attr("fill", d.highlight ? "orange" : "#00008B"); // Hervorgehobene Farbe
+                tooltip.style("display", "block")
+                    .html(`<strong>Datum:</strong> ${d.date}<br>
+                       <strong>Kategorie:</strong> ${d.category}<br>
+                       <strong>${currentMetric === "sales" ? "Verkäufe" : "Umsatz"}:</strong> ${d.value}`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+            })
+            .on("mousemove", (event) => {
+                tooltip.style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+            })
+            .on("mouseout", function (event, d) {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("fill", d.highlight ? "orange" : colorScale(d.value)); // Rückkehr zur Originalfarbe
+                tooltip.style("display", "none");
+            });
+
+        // Beschriftungen für die Spalten (oben)
+        const columnLabels = svg.append("g")
+            .selectAll("text")
+            .data(data.slice(0, numCols)) // Erste Zeile als Spaltenbeschriftung
+            .enter()
+            .append("text")
+            .attr("x", (d, i) => i * cellSize + (cellSize / 2)) // Zentriert über den Spalten
+            .attr("y", 15) // Platz oberhalb der Zellen
+            .attr("text-anchor", "middle")
+            .attr("font-size", "12px")
+            .attr("font-weight", "bold")
+            .text(d => d.date); // Hier Datum oder andere Spaltenüberschrift
+
+        // Beschriftungen für die Reihen (links)
+        const rowLabels = svg.append("g")
+            .selectAll("text")
+            .data(data.filter((_, i) => i % numCols === 0)) // Erste Spalte als Reihenbeschriftung
+            .enter()
+            .append("text")
+            .attr("x", -10) // Platz links der Zellen
+            .attr("y", (d, i) => i * cellSize + cellSize / 1.5 + 20) // Zentriert auf den Reihen
+            .attr("text-anchor", "end")
+            .attr("font-size", "12px")
+            .attr("font-weight", "bold")
+            .text(d => d.category); // Kategorie oder andere Reihenüberschrift
+
+        // Vertikale Farblegende
+        const legendHeight = 200;
+        const legendX = width + 20; // Rechts von der Heatmap
+        const legendY = (height - legendHeight) / 2;
+
+        const legendScale = d3.scaleLinear()
+            .domain([d3.max(data, d => d.value), 0]) // Dunkel oben, hell unten
+            .range([legendY, legendY + legendHeight]);
+
+        const legendAxis = d3.axisRight(legendScale)
+            .ticks(5);
+
+        const gradientId = "heatmap-vertical-gradient";
+
+        // Farbverlauf für die vertikale Legende definieren
+        const defs = svg.append("defs");
+        const gradient = defs.append("linearGradient")
+            .attr("id", gradientId)
+            .attr("x1", "0%")
+            .attr("x2", "0%")
+            .attr("y1", "0%")
+            .attr("y2", "100%");
+
+        gradient.append("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", d3.interpolateBlues(1)); // Dunkelblau oben
+
+        gradient.append("stop")
+            .attr("offset", "100%")
+            .attr("stop-color", d3.interpolateBlues(0)); // Hellblau unten
+
+        svg.append("rect")
+            .attr("x", legendX)
+            .attr("y", legendY)
+            .attr("width", 20)
+            .attr("height", legendHeight)
+            .style("fill", `url(#${gradientId})`);
+
+        svg.append("g")
+            .attr("transform", `translate(${legendX + 20}, 0)`)
+            .call(legendAxis);
+    }
+
+    function renderLineChart(data) {
+        const svg = d3.select("#sales-chart")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const x = d3.scalePoint()
+            .domain(data.map(d => d.date))
+            .range([0, width]);
+
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.value)]) // Nutze die aktuelle Metrik
+            .nice()
+            .range([height, 0]);
+
+        const line = d3.line()
+            .x(d => x(d.date))
+            .y(d => y(d.value)); // Nutze die aktuelle Metrik
+
+        svg.append("g")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x))
+            .selectAll("text")
+            .attr("transform", "rotate(-45)")
+            .style("text-anchor", "end");
+
+        svg.append("g").call(d3.axisLeft(y));
+
+        svg.append("path")
+            .datum(data)
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 1.5)
+            .attr("d", line);
+
+        const tooltip = d3.select("#tooltip");
+
+        svg.selectAll("circle")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("cx", d => x(d.date))
+            .attr("cy", d => y(d.value)) // Nutze die aktuelle Metrik
+            .attr("r", 5)
+            .attr("fill", "steelblue")
+            .on("mouseover", function (event, d) {
+                d3.select(this)
+                    .raise()
+                    .transition()
+                    .duration(200)
+                    .attr("r", 8)
+                    .attr("fill", "orange");
+                tooltip.style("display", "block")
+                    .html(`<strong>Datum:</strong> ${d.date}<br>
+                       <strong>Kategorie:</strong> ${d.category}<br>
+                       <strong>${currentMetric === "sales" ? "Verkäufe" : "Umsatz"}:</strong> ${d.value}`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+            })
+            .on("mousemove", (event) => {
+                tooltip.style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+            })
+            .on("mouseout", function () {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("r", 5)
+                    .attr("fill", "steelblue");
+                tooltip.style("display", "none");
+            });
+    }
+
+    function updateMetric(metric) {
+        currentMetric = metric;
+        refreshView();
+    }
+
+    function updateView(view) {
+        currentView = view;
+        refreshView();
+    }
+    function updateYear(year) {
+        selectedYear = year;
+        refreshView();
+    }
+
+    function updateChartAndTableByCategory() {
+        const aggregatedData = aggregateByCategory(originalData, selectedYear);
+        renderTable(aggregatedData, "category"); // Tabelle für Kategorien
+        renderChart(aggregatedData); // Diagramm für Kategorien
+    }
+
+    function updateChartType(type) {
+        chartType = type;
+        refreshView();
+    }
+
+    function refreshView() {
+        // Sichtbarkeit der Dropdowns steuern
+        const dateFilter = document.getElementById("date-filter");
+
+        if (currentView === "date") {
+            document.getElementById("interval-selector").style.display = "inline-block"; // Sichtbar für Datum
+            document.getElementById("year-selector").style.display = "none"; // Versteckt für Datum
+            dateFilter.style.display = "inline-block"; // Datumsfilter anzeigen
+            aggregatedData = aggregateSales(originalData, currentInterval); // Aggregation für Datum
+            renderTable(aggregatedData, "date"); // Tabelle aktualisieren
+        } else {
+            document.getElementById("interval-selector").style.display = "none"; // Versteckt für andere Ansichten
+            document.getElementById("year-selector").style.display = "inline-block"; // Sichtbar für Kategorie/Bundesland
+            dateFilter.style.display = "none"; // Datumsfilter verstecken
+
+            if (currentView === "category") {
+                aggregatedData = aggregateByCategory(originalData, selectedYear); // Aggregation für Kategorie
+                renderTable(aggregatedData, "category"); // Tabelle aktualisieren
+            } else if (currentView === "state") {
+                aggregatedData = aggregateByState(originalData, selectedYear); // Aggregation für Bundesland
+                renderTable(aggregatedData, "state"); // Tabelle aktualisieren
+            }
+        }
+
+        // Diagramm basierend auf aggregierten Daten aktualisieren
+        renderChart(aggregatedData);
+    }
+
+    function handleActionChange(action) {
+        if (action === "sort-asc") sortData("asc");
+        if (action === "sort-desc") sortData("desc");
+        if (action === "filter") filterData();
+        if (action === "reset") resetData(); // Hier wird resetData aufgerufen
+        if (action === "highlight-top") highlightTopThree();
+        if (action === "show-average") showAverageValue();
+        if (action === "sort-category" && currentView === "category") sortByCategory();
+
+        document.getElementById("action-selector").value = ""; // Dropdown zurücksetzen
+    }
+
+
+    function updateChart() {
+        const interval = document.getElementById("interval-selector").value;
+        currentInterval = interval; // Speichert das aktuelle Intervall
+
+        if (currentView === "date") {
+            const aggregatedData = aggregateSales(originalData, interval);
+            renderTable(aggregatedData, "date");
+            renderChart(aggregatedData);
+        }
+    }
+
+    function sortByCategory() {
+        aggregatedData.sort((a, b) => a.category.localeCompare(b.category));
+        renderTable(aggregatedData);
+        renderChart(aggregatedData);
+    }
+
+
+    function sortData(order) {
+        aggregatedData.sort((a, b) => {
+            if (order === "asc") {
+                return a.value - b.value; // Sortieren nach der aktuellen Metrik
+            } else {
+                return b.value - a.value;
+            }
+        });
+        renderTable(aggregatedData, currentView); // Tabelle aktualisieren
+        renderChart(aggregatedData); // Diagramm aktualisieren
+    }
+
+
+    function filterData() {
+        aggregatedData = aggregatedData.filter(d => d.value > 10); // Filter auf die aktuelle Metrik anwenden
+        renderTable(aggregatedData, currentView);
+        renderChart(aggregatedData);
+    }
+
+
+    function resetData() {
+        if (currentView === "state") {
+            aggregatedData = aggregateByState(originalData, selectedYear);
+            renderTable(aggregatedData, "state");
+        } else if (currentView === "category") {
+            aggregatedData = aggregateByCategory(originalData, selectedYear);
+            renderTable(aggregatedData, "category");
+        } else {
+            aggregatedData = aggregateSales(originalData, currentInterval);
+            renderTable(aggregatedData, "date");
+        }
+        renderChart(aggregatedData);
+    }
+
+
+    function highlightTopThree() {
+        aggregatedData = aggregatedData.map(d => ({ ...d, highlight: false }));
+        const topThree = [...aggregatedData].sort((a, b) => b.value - a.value).slice(0, 3); // Nach aktueller Metrik sortieren
+        topThree.forEach(d => d.highlight = true);
+        renderTable(aggregatedData, currentView);
+        renderChart(aggregatedData, true);
+    }
+
+    function showAverageValue() {
+        const average = d3.mean(aggregatedData, d => d.value); // Durchschnitt der aktuellen Metrik berechnen
+        document.getElementById("average-sales-value").textContent = average.toFixed(2);
+        document.getElementById("average-sales").style.display = "block";
+    }
+
+    function filterByDate() {
+        const startDateInput = document.getElementById("start-date").value;
+        const endDateInput = document.getElementById("end-date").value;
+
+        if (!startDateInput || !endDateInput) {
+            alert("Bitte Start- und Enddatum auswählen.");
+            return;
+        }
+
+        const startDate = new Date(startDateInput);
+        const endDate = new Date(endDateInput);
+
+        if (startDate > endDate) {
+            alert("Das Startdatum muss vor dem Enddatum liegen.");
+            return;
+        }
+
+        // Filtern der Daten basierend auf dem Datum
+        const filteredData = originalData.filter(d => {
+            const date = new Date(d.date);
+            return date >= startDate && date <= endDate;
+        });
+
+        // Aktualisieren der Tabelle und des Diagramms
+        aggregatedData = aggregateSales(filteredData, currentInterval);
+        renderTable(aggregatedData, "date");
+        renderChart(aggregatedData);
+    }
+
+
+    function updateTableHeaders(groupBy = "date") {
+        const tableHead = d3.select("#data-overview thead");
+        tableHead.selectAll("tr").remove(); // Alte Überschriften entfernen
+
+        let headers = [];
+        if (groupBy === "category") {
+            headers = ["Category", "Number of Sales", "Revenue", "States"];
+        } else if (groupBy === "state") {
+            headers = ["State", "Categories", "Number of Sales", "Revenue"];
+        } else {
+            headers = ["Date", "Category", "Number of Sales", "Revenue", "State"];
+        }
+
+        tableHead.append("tr")
+            .selectAll("th")
+            .data(headers)
+            .enter()
+            .append("th")
+            .text(d => d);
+    }
+
+    function renderTable(data, groupBy = "date") {
+        updateTableHeaders(groupBy); // Überschriften aktualisieren
+
+        const tbody = d3.select("#data-overview tbody");
+        tbody.selectAll("tr").remove();
+
+        tbody.selectAll("tr")
+            .data(data)
+            .enter()
+            .append("tr")
+            .attr("class", d => d.highlight ? "highlight" : "")
+            .html(d => {
+                if (groupBy === "category") {
+                    return `
+                    <td>${d.category || ''}</td>
+                    <td>${d.sales || ''}</td>
+                    <td>${d.revenue || ''}</td>
+                    <td>${d.states || ''}</td>
+                `;
+                } else if (groupBy === "state") {
+                    return `
+                    <td>${d.state || ''}</td>
+                    <td>${d.categories || ''}</td>
+                    <td>${d.sales || ''}</td>
+                    <td>${d.revenue || ''}</td>
+                `;
+                } else {
+                    // Default: Nach Datum gruppiert
+                    return `
+                    <td>${d.date || ''}</td>
+                    <td>${d.category || ''}</td>
+                    <td>${d.sales || ''}</td>
+                    <td>${d.revenue || ''}</td>
+                    <td>${d.state || ''}</td>
+                `;
+                }
+            });
+    }
+
+
+
+    // Initial render
+    aggregatedData = aggregateSales(originalData, "day");
+    renderTable(aggregatedData);
+    renderChart(aggregatedData);
+    document.getElementById("year-selector").style.display = "none"; // Standardmäßig ausblenden
+    document.getElementById("interval-selector").style.display = "inline-block"; // Standardmäßig anzeigen
+
+    function printPage() {
+        window.print();
+    }
+    function exportCSV() {
+        // Erstelle den Header der CSV-Datei
+        const csvHeader = "Datum,Kategorie,Verkäufe,Umsatz,Bundesland\n";
+
+        // Füge die Daten aus aggregatedData hinzu
+        const csvRows = aggregatedData.map(d =>
+            `${d.date},${d.category},${d.sales},${d.revenue},${d.state}`
+        ).join("\n");
+
+        // Kombiniere den Header und die Daten
+        const csvContent = "data:text/csv;charset=utf-8," + csvHeader + csvRows;
+
+        // Erstelle eine Download-URL für die CSV-Datei
+        const encodedUri = encodeURI(csvContent);
+
+        // Erstelle einen temporären Link, um die Datei herunterzuladen
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "data.csv");
+
+        // Füge den Link zum Dokument hinzu, klicke darauf, und entferne ihn danach
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function exportPDF() {
+        const { jsPDF } = window.jspdf;
+
+        // Wähle den gesamten sichtbaren Bereich aus
+        const element = document.body;
+
+        html2canvas(element, { scale: 2 }).then(canvas => {
+            const imgData = canvas.toDataURL("image/png");
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save('statistics.pdf'); // PDF herunterladen
+        });
+    }
+
+    function openCompareMode() {
+        const compareButton = document.getElementById("compare-button");
+        compareButton.style.display = "none";
+        window.location.href = "compareEN.html";
+        console.log("Trying to navigate to the comparison page...");
+    }
+
+    function openMapMode() {
+        const mapButton = document.getElementById("map-button");
+        mapButton.style.display = "none"; // Button verstecken
+        window.location.href = "map.html"; // Wechsel zur Map-Datei
+        console.log("Versuche, zur Map zu navigieren...");
+    }
+    function hideElementsForCompareMode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('compare') === 'true') {
+            document.getElementById("compare-button").style.display = "none";
+            document.getElementById("export-options").style.display = "none";
+            document.getElementById("theme-toggle").style.display = "none";
+        }
+    }
+    let darkMode = false;
+    function toggleTheme() {
+        darkMode = !darkMode;
+        document.body.style.backgroundColor = darkMode ? "#121212" : "#ffffff";
+        document.body.style.color = darkMode ? "#ffffff" : "#000000";
+
+        const controls = document.getElementById("controls");
+        controls.style.backgroundColor = darkMode ? "#222" : "#f9f9f9";
+        controls.style.borderBottom = darkMode ? "1px solid #444" : "1px solid #ccc";
+
+        const tableHeaders = document.querySelectorAll("#data-overview th");
+        tableHeaders.forEach(header => {
+            header.style.backgroundColor = darkMode ? "#0844A4" : "#007bff";
+            header.style.color = darkMode ? "#ffffff" : "#ffffff";
+        });
+
+        const tableCells = document.querySelectorAll("#data-overview td");
+        tableCells.forEach(cell => {
+            cell.style.backgroundColor = darkMode ? "#222" : "#ffffff";
+            cell.style.color = darkMode ? "#ffffff" : "#000000";
+        });
+
+        const buttons = document.querySelectorAll("#controls button");
+        buttons.forEach(button => {
+            button.style.backgroundColor = darkMode ? "#0844A4" : "#f9f9f9";
+            button.style.color = darkMode ? "#ffffff" : "#000000";
+        });
+
+        const dropdowns = document.querySelectorAll("#controls select");
+        dropdowns.forEach(select => {
+            select.style.backgroundColor = darkMode ? "#222" : "#ffffff";
+            select.style.color = darkMode ? "#ffffff" : "#000000";
+            select.style.border = darkMode ? "1px solid #444" : "1px solid #ccc";
+        });
+
+        const inputs = document.querySelectorAll("input");
+        inputs.forEach(input => {
+            input.style.backgroundColor = darkMode ? "#222" : "#ffffff";
+            input.style.color = darkMode ? "#ffffff" : "#000000";
+            input.style.border = darkMode ? "1px solid #444" : "1px solid #ccc";
+        });
+
+        // Tooltip
+        const tooltip = document.getElementById("tooltip");
+        if (tooltip) {
+            tooltip.style.backgroundColor = darkMode ? "#333" : "lightgrey";
+            tooltip.style.color = darkMode ? "#ffffff" : "#000000";
+        }
+
+        const svgElements = document.querySelectorAll("svg");
+        svgElements.forEach(svg => {
+            svg.style.backgroundColor = darkMode ? "#121212" : "#ffffff";
+        });
+
+        const themeToggle = document.getElementById("theme-toggle");
+        themeToggle.textContent = darkMode ? "☀️" : "🌙";
+        themeToggle.style.backgroundColor = darkMode ? "#0844A4" : "#FFFFFF";
+        themeToggle.style.color = darkMode ? "#FFFFFF" : "#333";
+    }
+    document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
+
+    document.addEventListener("DOMContentLoaded", hideElementsForCompareMode);
+
+    // Add an event listener to handle postMessage for Darkmode
+    window.addEventListener("message", (event) => {
+        if (event.data.theme === "dark") {
+            if (!darkMode) toggleTheme(); // Activate Darkmode
+        } else if (event.data.theme === "light") {
+            if (darkMode) toggleTheme(); // Deactivate Darkmode
+        }
+    });
+
+
+</script>
+</body>
+</html>
