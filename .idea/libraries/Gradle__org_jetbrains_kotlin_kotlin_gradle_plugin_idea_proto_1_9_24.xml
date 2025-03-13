@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-idea-proto:1.9.24" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="org.jetbrains.kotlin" artifactId="kotlin-gradle-plugin-idea-proto" version="1.9.24" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-gradle-plugin-idea-proto/1.9.24/6cbed8e30d8dd9893288df9c90b0e63845484650/kotlin-gradle-plugin-idea-proto-1.9.24.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-gradle-plugin-idea-proto/1.9.24/21d694d95e80410095b2bbf2134b4e6456949292/kotlin-gradle-plugin-idea-proto-1.9.24-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

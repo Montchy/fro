@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:1.9.24" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="org.jetbrains.kotlin" artifactId="kotlin-scripting-compiler-embeddable" version="1.9.24" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-compiler-embeddable/1.9.24/1e6b33f8a691420c1265349809192b66b7e56e8b/kotlin-scripting-compiler-embeddable-1.9.24.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-compiler-embeddable/1.9.24/802ee8613a8a2cb21f4a7a51c16fc74d8105a182/kotlin-scripting-compiler-embeddable-1.9.24-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

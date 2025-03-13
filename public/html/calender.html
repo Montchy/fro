@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinsky Auktionshaus Kalender</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.4/index.global.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.4/index.global.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+        }
+        #calendar {
+            max-width: 90%;
+            margin: 20px auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        /* Modal-Hintergrund */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease;
+        }
+
+        /* Modal-Inhalt */
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px 40px;
+            border-radius: 15px;
+            width: 40%;
+            max-width: 600px;
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
+            animation: slide-down 0.5s ease-out;
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* Einheitlicher Abstand zwischen den Elementen */
+        }
+
+        /* Schließen-Button */
+        .modal .close {
+            color: #888;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .modal .close:hover {
+            color: #E0A800;
+        }
+
+        /* Nur Buttons im Modal */
+        .modal button {
+            background-color: #FEC63D;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background-color 0.3s ease, transform 0.2s;
+            padding: 12px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .modal button:hover {
+            background-color: #E0A800;
+            transform: scale(1.05);
+        }
+
+        /* Eingabefelder nur im Modal */
+        .modal input,
+        .modal select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 16px;
+            margin-top: 3px;
+        }
+
+        /* Animation für das Modal */
+        @keyframes slide-down {
+            0% {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .modal label {
+            font-weight: bold;
+            margin-bottom: 3px; /* Weniger Abstand unter dem Label */
+        }
+        .fc-event {
+            color: white !important; /* Textfarbe weiß für bessere Lesbarkeit */
+            padding: 5px; /* Abstand innerhalb des Termins */
+            border-radius: 5px; /* Leichte Abrundung */
+            overflow: hidden;
+        }
+
+        .fc-event i {
+            margin-right: 5px;
+            font-size: 14px;
+            vertical-align: middle;
+            color: white; /* Falls das Icon unsichtbar ist, mache es sichtbar */
+        }
+
+        #colorDisplay {
+            transition: all 0.3s ease;
+        }
+
+        #colorDisplay:hover {
+            transform: scale(1.1);
+            border-color: #E0A800;
+        }
+
+
+    </style>
+</head>
+<body>
+<div id="calendar"></div>
+
+<!-- Modal -->
+<div id="eventModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Neuen Termin erstellen</h2>
+        <label>Titel:</label>
+        <input type="text" id="eventTitle" placeholder="Titel des Termins"><br>
+        <label>Beschreibung:</label>
+        <input type="text" id="eventDescription" placeholder="Beschreibung des Termins"><br>
+        <label>Startdatum:</label>
+        <input type="date" id="eventStartDate"><br>
+        <label>Enddatum:</label>
+        <input type="date" id="eventEndDate"><br>
+        <label>Uhrzeit von:</label>
+        <input type="time" id="eventStartTime"><br>
+        <label>Uhrzeit bis:</label>
+        <input type="time" id="eventEndTime"><br>
+        <label>Priorität:</label>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="eventPriority" style="flex-grow: 1;">
+                <option value="#E0A800" style="background-color: #E0A800; color: white;">Niedrig</option>
+                <option value="#FEC63D" style="background-color: #FEC63D; color: white;">Mittel</option>
+                <option value="red" style="background-color: red; color: white;">Hoch</option>
+                <option value="custom">Eigene Farbe...</option>
+            </select>
+            <label for="customColorPicker" style="cursor: pointer;">
+                <input type="color" id="customColorPicker" style="display: none;" value="#FFFFFF" />
+                <div id="colorDisplay" style="
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            background-color: #FFFFFF;">
+                </div>
+            </label>
+        </div>
+        <label>Symbol:</label>
+        <select id="eventIcon">
+            <option value="fas fa-calendar">Kalender</option>
+            <option value="fas fa-bell">Erinnerung</option>
+            <option value="fas fa-exclamation-triangle">Wichtig</option>
+            <option value="fas fa-star">Highlight</option>
+            <option value="fas fa-check-circle">Erledigt</option>
+        </select><br>
+        <button onclick="addEvent()">Termin hinzufügen</button>
+    </div>
+    <!-- Modal für Termin-Details, Bearbeiten und Löschen -->
+    <div id="eventDetailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeDetailsModal()">&times;</span>
+            <h2>Termin Details</h2>
+            <p><strong>Titel:</strong> <span id="detailTitle"></span></p>
+            <p><strong>Beschreibung:</strong> <span id="detailDescription"></span></p>
+            <p><strong>Datum:</strong> <span id="detailDate"></span></p>
+            <p><strong>Uhrzeit:</strong> <span id="detailTime"></span></p>
+            <p><strong>Symbol:</strong> <span id="detailIcon"></span></p>
+            <button onclick="editEvent()">Bearbeiten</button>
+            <button onclick="deleteEvent()">Löschen</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            editable: true,
+            selectable: true,
+            select: function(info) {
+                document.getElementById('eventStartDate').value = info.startStr;
+                openModal(); // Öffnet das Modal zum Erstellen eines neuen Termins
+            },
+            events: [],
+            eventClick: function(info) {
+                selectedEvent = info.event; // Speichert das ausgewählte Event
+                console.log("Event wurde angeklickt:", info.event.title); // Debug: Prüfen, ob das Event angeklickt wurde
+
+                document.getElementById('detailTitle').innerText = info.event.title;
+                document.getElementById('detailDescription').innerText = info.event.extendedProps.description;
+                document.getElementById('detailDate').innerText = `${info.event.start.toLocaleDateString()} - ${info.event.end ? info.event.end.toLocaleDateString() : ''}`;
+                document.getElementById('detailTime').innerText = `${info.event.start.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})} - ${info.event.end ? info.event.end.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : ''}`;
+                document.getElementById('detailIcon').innerHTML = `<i class="${info.event.extendedProps.icon}"></i>`;
+
+                openDetailsModal(); // Öffnet das Details-Modal
+            }
+        });
+
+        calendar.render(); // Wichtig: Rendert den Kalender
+
+        calendar.render();
+
+        document.getElementById('eventPriority').addEventListener('change', function() {
+            var colorPicker = document.getElementById('customColorPicker');
+            var colorDisplay = document.getElementById('colorDisplay');
+
+            if (this.value === 'custom') {
+                colorPicker.style.display = 'block';
+                colorDisplay.style.border = '2px solid #E0A800';
+            } else {
+                colorPicker.style.display = 'none';
+                colorDisplay.style.backgroundColor = this.value;
+                colorDisplay.style.border = '2px solid #ddd';
+            }
+        });
+
+// Aktualisiere die Farbe der runden Anzeige
+        document.getElementById('customColorPicker').addEventListener('input', function() {
+            var colorDisplay = document.getElementById('colorDisplay');
+            colorDisplay.style.backgroundColor = this.value;
+        });
+
+
+        window.addEvent = function() {
+            var title = document.getElementById('eventTitle').value;
+            var description = document.getElementById('eventDescription').value;
+            var startDate = document.getElementById('eventStartDate').value;
+            var endDate = document.getElementById('eventEndDate').value;
+            var startTime = document.getElementById('eventStartTime').value;
+            var endTime = document.getElementById('eventEndTime').value;
+            var priorityColor = document.getElementById('eventPriority').value;
+            var icon = document.getElementById('eventIcon').value;
+
+            var color = (priorityColor === 'custom') ? document.getElementById('customColorPicker').value : priorityColor;
+
+            if (title) {
+                if (selectedEvent) {
+                    // Bearbeiten des bestehenden Events
+                    selectedEvent.setProp('title', title);
+                    selectedEvent.setExtendedProp('description', description);
+                    selectedEvent.setStart(startDate + 'T' + startTime);
+                    selectedEvent.setEnd(endDate + 'T' + endTime);
+                    selectedEvent.setProp('color', color);
+                    selectedEvent.setExtendedProp('icon', icon);
+                } else {
+                    // Neues Event hinzufügen
+                    calendar.addEvent({
+                        title: title,
+                        start: startDate + 'T' + startTime,
+                        end: endDate + 'T' + endTime,
+                        color: color,
+                        display: 'block',
+                        description: description,
+                        extendedProps: {
+                            icon: icon
+                        }
+                    });
+                }
+                closeModal();
+            }
+        }
+
+
+        window.openModal = function() {
+            var modal = document.getElementById('eventModal');
+            modal.style.display = 'block';
+            modal.style.opacity = '0';
+            setTimeout(function() {
+                modal.style.opacity = '1';
+            }, 10);
+        }
+
+        window.closeModal = function() {
+            var modal = document.getElementById('eventModal');
+            modal.style.opacity = '0';
+            setTimeout(function() {
+                modal.style.display = 'none';
+            }, 300);
+        }
+    });
+
+    var selectedEvent = null; // Globaler Verweis auf das aktuell ausgewählte Event
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        editable: true,
+        selectable: true,
+        select: function(info) {
+            document.getElementById('eventStartDate').value = info.startStr;
+            openModal();
+        },
+        events: [],
+        eventClick: function(info) {
+            selectedEvent = info.event; // Setze das ausgewählte Event
+            document.getElementById('detailTitle').innerText = info.event.title;
+            document.getElementById('detailDescription').innerText = info.event.extendedProps.description;
+            document.getElementById('detailDate').innerText = `${info.event.start.toLocaleDateString()} - ${info.event.end ? info.event.end.toLocaleDateString() : ''}`;
+            document.getElementById('detailTime').innerText = `${info.event.start.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})} - ${info.event.end ? info.event.end.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : ''}`;
+            document.getElementById('detailIcon').innerHTML = `<i class="${info.event.extendedProps.icon}"></i>`;
+            openDetailsModal();
+        }
+    });
+
+    // Schließt das Details-Modal
+    function closeDetailsModal() {
+        var modal = document.getElementById('eventDetailsModal');
+        modal.style.display = 'none';
+        modal.style.opacity = '0';
+    }
+
+    window.closeModal = function() {
+        var modal = document.getElementById('eventModal');
+        modal.style.opacity = '0';
+        setTimeout(function() {
+            modal.style.display = 'none';
+            selectedEvent = null; // Lösche den Verweis auf das Event
+        }, 300);
+    }
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        editable: true,
+        selectable: true,
+        select: function(info) {
+            document.getElementById('eventStartDate').value = info.startStr;
+            openModal(); // Öffnet das Modal zum Erstellen eines neuen Termins
+        },
+        events: [],
+        eventClick: function(info) {
+            selectedEvent = info.event; // Setzt das aktuell ausgewählte Event
+            console.log("Event wurde angeklickt:", info.event.title); // Debug-Ausgabe
+
+            document.getElementById('detailTitle').innerText = info.event.title;
+            document.getElementById('detailDescription').innerText = info.event.extendedProps.description;
+            document.getElementById('detailDate').innerText = `${info.event.start.toLocaleDateString()} - ${info.event.end ? info.event.end.toLocaleDateString() : ''}`;
+            document.getElementById('detailTime').innerText = `${info.event.start.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})} - ${info.event.end ? info.event.end.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : ''}`;
+            document.getElementById('detailIcon').innerHTML = `<i class="${info.event.extendedProps.icon}"></i>`;
+
+            openDetailsModal(); // Öffnet das Modal mit den Event-Details
+        }
+    });
+
+    calendar.render(); // Wichtig: Rendert den Kalender
+
+
+    // Öffnet das Details-Modal
+    function openDetailsModal() {
+        var modal = document.getElementById('eventDetailsModal');
+        modal.style.display = 'block';
+        modal.style.opacity = '1'; // Macht das Modal sichtbar
+    }
+
+
+    function editEvent() {
+        if (selectedEvent) {
+            document.getElementById('eventTitle').value = selectedEvent.title;
+            document.getElementById('eventDescription').value = selectedEvent.extendedProps.description;
+            document.getElementById('eventStartDate').value = selectedEvent.start.toISOString().split('T')[0];
+            document.getElementById('eventEndDate').value = selectedEvent.end ? selectedEvent.end.toISOString().split('T')[0] : '';
+            document.getElementById('eventStartTime').value = selectedEvent.start.toTimeString().slice(0, 5);
+            document.getElementById('eventEndTime').value = selectedEvent.end ? selectedEvent.end.toTimeString().slice(0, 5) : '';
+            document.getElementById('eventIcon').value = selectedEvent.extendedProps.icon;
+
+            openModal(); // Öffnet das Modal zur Bearbeitung des Events
+            closeDetailsModal(); // Schließt das Details-Modal
+        }
+    }
+
+    // Löscht das aktuell ausgewählte Event
+    function deleteEvent() {
+        if (selectedEvent) {
+            selectedEvent.remove(); // Entfernt das Event aus dem Kalender
+            closeDetailsModal(); // Schließt das Modal
+        }
+    }
+
+</script>
+</body>
+</html>
