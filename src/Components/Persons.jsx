@@ -196,9 +196,14 @@ const Persons = ({ darkMode, isEnglish }) => {
                         {filteredPersons.map((person, index) => (
                             <View key={index} style={[styles.personBox,darkMode?styles.personBoxD:styles.personBoxL]}>
                                 <TouchableOpacity onPress={() => navigate(`/person/${person.id}`)}>
-                                    <View style={{ margin: 10 }}>
-                                        <Image style={styles.images} source={person.imageData} />
-                                    </View>
+                                    
+                         {person.imageData ? (
+                 <Image style={styles.images} source={{ uri: person.imageData }} />
+) : (
+    <Image style={styles.images} source={{ uri: "https://xsgames.co/randomusers/avatar.php?g=pixel" }} />
+)}
+
+
                                     <View style={styles.line}></View>
                                     <View>
                                         <Text style={[styles.personName,darkMode?{color:"white"}:{color:"black"}]}>{person.vorname}</Text>
@@ -218,7 +223,7 @@ const Persons = ({ darkMode, isEnglish }) => {
                                     <Text style={{ fontWeight: "bold" }}>
                                         {person.nachname} {person.vorname} ({person.typ})
                                     </Text>
-                                    <Image style={{ width: 20, height: 20, marginLeft: 10 }} source={arrow} />
+                                    <Image style={{ width: 20, height: 20, marginLeft: 10 }} source={{ uri: `http://localhost:8080${person.imageUrl}` }} />
                                 </TouchableOpacity>
                             </View>
                         ))}

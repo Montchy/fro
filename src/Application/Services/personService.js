@@ -51,30 +51,30 @@ const sanitizeData = (data, seen = new WeakSet()) => {
  * Ruft alle Personen aus verschiedenen Endpunkten ab und führt sie zu einer Liste zusammen.
  */
 export const fetchAllPersons = async () => {
-    console.log("Vermittler-Methode vorhanden?", typeof ApiService.fetchVERMITTLER === "function");
-    console.log("Einbringer-Methode vorhanden?", typeof ApiService.fetchEINBRINGER === "function");
-    console.log("Betreuer-Methode vorhanden?", typeof ApiService.fetchBETREUER === "function");
-    console.log("Auktionen-Methode vorhanden?", typeof ApiService.fetchAUKTIONEN === "function");
-
-
     try {
-        const vermittler = await fetchAndLog("Vermittler", ApiService.fetchVERMITTLER);
-        const einbringer = await fetchAndLog("Einbringer", ApiService.fetchEINBRINGER);
-        const betreuer = await fetchAndLog("Betreuer", ApiService.fetchBETREUER);
+        const response = await fetch("http://localhost:8080/api/persons");
+        const persons = await response.json();
 
-        const allPersons = [
-            ...sanitizePersons(vermittler, "Vermittler"),
-            ...sanitizePersons(einbringer, "Einbringer"),
-            ...sanitizePersons(betreuer, "Betreuer"),
-        ];
+        // Lade für jede Person das Bild separat
+        const personsWithImages = await Promise.all(
+            persons.map(async (person) => {
+                try {
+                    const imageResponse = await fetch(`http://localhost:8080/api/image/${person.id}`);
+                    const imageData = await imageResponse.json();
+                    return { ...person, imageData: imageData.imageBase64 || null };
+                } catch (error) {
+                    console.error("Fehler beim Laden des Bildes für Person", person.id);
+                    return { ...person, imageData: null };
+                }
+            })
+        );
 
-        return allPersons;
+        return personsWithImages;
     } catch (error) {
         console.error("Fehler beim Abrufen der Personen:", error);
-        throw error;
+        return [];
     }
 };
-
 /**
  * Bereinigt und formatiert die Liste der Personen.
  */
