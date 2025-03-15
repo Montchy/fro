@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const { spawn } = require("child_process");
-//const ollama = require("ollama");
 
 const app = express();
 const port = 5004;
@@ -10,13 +9,6 @@ app.use(cors());
 app.use(express.json());
 
 app.post("/chat", async (req, res) => {
-  /*const r = await ollama.chat({
-    model: 'llama3.1',
-    messages: [{ role: 'user', content: 'Why is the sky blue?' }],
-  })
-  console.log(r.message.content)*/
-
-
   const { message } = req.body;
 
   if (!message || typeof message !== "string") {
@@ -25,7 +17,7 @@ app.post("/chat", async (req, res) => {
 
   console.log(`📩 Eingehende Nachricht: "${message}"`);
 
-  const process = spawn("ollama", ["run", "mistral", "--host", "127.0.0.1:5004", message]);
+  const process = spawn("ollama", ["run", "gemma"]); //TinyLlama geht aber antwortet komisch
 
   let response = "";
 
@@ -45,11 +37,9 @@ app.post("/chat", async (req, res) => {
     console.log(`✅ Antwort von Ollama: "${response.trim()}"`);
     res.json({ reply: response.trim() });
   });
-});
 
-process.stdout.on("data", (data) => {
-  response += data.toString();
-  console.log("🔹 Antwort von Ollama:", response); 
+  process.stdin.write(message + "\n");
+  process.stdin.end();
 });
 
 app.listen(port, () => {
