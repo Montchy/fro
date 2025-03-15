@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: org.jetbrains.kotlin:kotlin-build-tools-api:1.9.24" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="org.jetbrains.kotlin" artifactId="kotlin-build-tools-api" version="1.9.24" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-tools-api/1.9.24/7815f17102735413773a54a9baa742358225cf77/kotlin-build-tools-api-1.9.24.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-tools-api/1.9.24/b7d0777a5bcdd6cc6afbd3e1d4c1d61c6a066a3b/kotlin-build-tools-api-1.9.24-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
